@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!--
+  Fill in before publishing:
+    [[SITE URL]]           the live address, no trailing slash, e.g. https://example.org
+    [[SOCIAL IMAGE PATH]]  a 1200x630 PNG or JPG for link previews. A candidate is ready:
+                           assets/og-image.png (1200x630, the home page's hero).
+    [[ORGANIZATION NAME]]  the name of the business or person that offers the product
+    [[CONTACT EMAIL]]      the public contact address
+  The JSON-LD below is not valid until [[SITE URL]] is a real URL.
+  It has no price, rating or review on purpose: none exist yet.
+-->
+<title>Sentinel | Points for students who come to games</title>
+<meta name="description" content="Students earn points for coming to games and spend them on prizes. A gate worker scans each QR code with a phone." />
+<link rel="canonical" href="[[SITE URL]]/" />
+<meta name="theme-color" content="#06141B" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+
+<!-- Link previews (Facebook, LinkedIn, iMessage, Slack and others) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Sentinel" />
+<meta property="og:title" content="Sentinel: fill the student section" />
+<meta property="og:description" content="Students earn points for attending games and spend them on prizes. A gate worker scans each QR code with a phone." />
+<meta property="og:url" content="[[SITE URL]]/" />
+<meta property="og:image" content="[[SITE URL]]/[[SOCIAL IMAGE PATH]]" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Sentinel: students earn points for coming to games" />
+<meta property="og:locale" content="en_US" />
+
+<!-- X (Twitter) previews -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Sentinel: fill the student section" />
+<meta name="twitter:description" content="Students earn points for attending games and spend them on prizes. A gate worker scans each QR code with a phone." />
+<meta name="twitter:image" content="[[SITE URL]]/[[SOCIAL IMAGE PATH]]" />
+<meta name="twitter:image:alt" content="Sentinel: students earn points for coming to games" />
+
+<!-- Structured data: only true facts and placeholders. No offers, ratings or reviews. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "[[SITE URL]]/#organization",
+      "name": "[[ORGANIZATION NAME]]",
+      "url": "[[SITE URL]]/",
+      "email": "[[CONTACT EMAIL]]",
+      "description": "Makers of Sentinel, an attendance rewards program for high school games."
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "[[SITE URL]]/#app",
+      "name": "Sentinel",
+      "url": "[[SITE URL]]/",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web browser",
+      "description": "Students earn points for attending games and spend them on prizes. A gate worker scans each student's QR code with a phone camera in a web browser. No app install or scanner hardware.",
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "High school athletic directors, principals and district staff"
+      },
+      "publisher": { "@id": "[[SITE URL]]/#organization" }
+    }
+  ]
+}
+</script>
+
+<link rel="preload" href="assets/fonts/sofia-sans-extra-condensed-latin-wght-5.3.0.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="assets/site.css" />
+<link rel="stylesheet" href="assets/home.css" />
+<link rel="prefetch" href="how-it-works.html" />
+<link rel="prefetch" href="pricing.html" />
+<script src="assets/site.js" defer></script>
+</head>
+<body class="home">
+<a class="sr skip" href="#main">Skip to content</a>
+
+<header class="bar" id="bar">
+  <div class="wrap">
+    <a class="brand" href="./"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="4.5" r="3"/><circle cx="12" cy="4.5" r="3"/><circle cx="19" cy="4.5" r="3"/><circle cx="5" cy="12" r="3"/><circle cx="19" cy="12" r="3"/><path d="M11 16.5h2V24h-2z"/></g><circle cx="12" cy="12" r="3" fill="#FF6A3D"/></svg>Sentinel</a>
+    <nav aria-label="Main">
+      <!-- the same links on every page; the current page gets aria-current="page". Without JS, Menu jumps to the footer links. -->
+      <a class="menu-btn" href="#footer-nav"><svg class="m" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="2" fill="none"/></svg><svg class="x" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="2" fill="none"/></svg>Menu</a>
+      <ul class="links" id="site-menu">
+        <li><a href="how-it-works.html">How it works</a></li>
+        <li><a href="schools.html">For schools</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="demo.html">Live demo</a></li>
+        <li><a href="/sentinel-preview/demo.html">Sign in</a></li>
+        <li class="menu-cta"><a class="btn" href="pricing.html#pilot">Book a pilot</a></li>
+      </ul>
+    </nav>
+    <a class="btn" href="pricing.html#pilot">Book a pilot</a>
+  </div>
+</header>
+
+<main id="main">
+<!-- 1. LIGHTS ON: the headline stands between the sky and the trees. The canvas draws it; the h1 is the same words for everyone else. -->
+<section class="s-hero scene" id="top" aria-labelledby="hero-h">
+  <div class="stick">
+    <picture class="still"><source media="(max-width:700px)" srcset="assets/photos/field-1200.webp"><img src="assets/photos/field-2400.webp" alt="" width="2400" height="1500" fetchpriority="high"></picture>
+    <canvas id="gl-hero" aria-hidden="true"></canvas>
+    <h1 id="hero-h">Fill the student section</h1>
+    <div class="foot">
+      <p>Students earn points at every game they come to, and spend them on prizes your school picks.</p>
+      <div class="acts"><a class="btn accent" href="pricing.html#pilot">Book a pilot</a><a class="go" href="demo.html">Try the live demo</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. THE GATE: the line moves on its own. Cards in, scanned, points out. -->
+<section class="s-gate" id="night" aria-labelledby="night-h">
+  <div class="stage scene">
+    <canvas id="gl-gate" aria-hidden="true"></canvas>
+    <img class="still-phone" src="assets/photos/app-ava.webp" alt="The gate screen after a scan: Ava Clark, plus 50 points." width="780" height="1640" loading="lazy">
+  </div>
+  <div class="wrap">
+    <div class="gate-head"><h2 class="d2" id="night-h">At the gate</h2></div>
+    <ol class="steps">
+      <li class="step"><h3>Check the ticket</h3><p>GoFan or your ticket table, same as now.</p></li>
+      <li class="step"><h3>Scan the QR code</h3><p>Any phone, in the browser. Students print it or show it on a screen.</p></li>
+      <li class="step"><h3>Add the points</h3><p>Once per student, per game.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 3. THE FILL: the only scene tied to the scroll -->
+<section class="s-fill track" aria-labelledby="fill-h">
+  <div class="stick">
+    <picture><source media="(max-width:700px)" srcset="assets/photos/bleachers-tall.webp"><img class="empty" src="assets/photos/bleachers-2400.webp" alt="Rows of empty metal bleachers" width="2400" height="1600" loading="lazy"></picture>
+    <picture><source media="(max-width:700px)" srcset="assets/photos/crowd-tall.webp"><img class="full" src="assets/photos/crowd-2400.webp" alt="" width="2400" height="1600" loading="lazy"></picture>
+    <h2 id="fill-h"><span>Give them a reason</span> <span>to show up</span></h2>
+  </div>
+</section>
+
+<!-- 4. THE SCOREBOARD -->
+<section class="s-board" aria-labelledby="board-h">
+  <div class="wrap">
+    <h2 class="d2" id="board-h">What points buy</h2>
+    <div class="board" role="group" aria-label="Points calculator">
+      <div class="board-top">
+        <div class="seg"><span>Games</span><output id="seg-games" for="games" aria-live="off">3</output></div>
+        <div class="seg"><span>Points</span><output id="seg-points" for="games" aria-live="off">150</output></div>
+      </div>
+      <div class="dial">
+        <label for="games">Drag to change the games attended</label>
+        <button class="nudge" id="fewer" type="button" aria-label="One game fewer"><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M2 11h18" stroke="currentColor" stroke-width="4"/></svg></button>
+        <input type="range" id="games" min="0" max="10" step="1" value="3">
+        <button class="nudge" id="more" type="button" aria-label="One game more"><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M2 11h18M11 2v18" stroke="currentColor" stroke-width="4"/></svg></button>
+        <span class="ticks" aria-hidden="true"><i>0</i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i><i>10</i></span>
+      </div>
+      <ul class="prizes" id="prizes">
+        <li data-cost="100"><button type="button"><i class="bulb"></i><b>Concession voucher</b><span>100</span></button></li>
+        <li data-cost="250"><button type="button"><i class="bulb"></i><b>$10 gift card</b><span>250</span></button></li>
+        <li data-cost="400"><button type="button"><i class="bulb"></i><b>Spirit T-shirt</b><span>400</span></button></li>
+      </ul>
+      <p class="sr" id="board-note" aria-live="polite"></p>
+    </div>
+    <p class="fine"><span data-confirm="prizes-not-included">Prizes aren't included in the price. Your school, booster club or sponsors choose and supply them.</span> Sample prizes, at 50 points a game.</p>
+  </div>
+</section>
+
+<!-- 5. THE SCANNER -->
+<section class="s-cheat scene" id="gate" tabindex="-1" aria-labelledby="gate-h">
+  <canvas class="air" data-air="rain" data-src="light-tower" data-at="62 0" aria-hidden="true"></canvas>
+  <picture class="bg"><source media="(max-width:700px)" srcset="assets/photos/light-tower-tall.webp"><img src="assets/photos/light-tower-2400.webp" alt="" width="2400" height="1603" loading="lazy"></picture>
+  <div class="wrap">
+    <div class="say">
+      <h2 class="d2" id="gate-h">Try the scanner</h2>
+      <p>Second scans and inactive memberships are refused.</p>
+      <p><a class="go" href="/sentinel-preview/app/?demo=staff">Open the gate demo</a></p>
+    </div>
+    <div class="scanner" role="region" aria-label="Gate scanner demo">
+      <div class="scan-top"><h3>Football vs. Eastside</h3><span>Sample game</span></div>
+      <div class="vf" id="vf" data-state="idle"><svg id="scanqr" viewBox="0 0 29 29" aria-hidden="true"></svg><span class="laser"></span></div>
+      <div class="result" id="result" aria-live="polite"><strong>Pick a student to scan</strong>The result shows up here.</div>
+      <ul class="queue" id="queue"></ul>
+      <button class="reset" id="scan-reset" type="button">Reset the demo</button>
+    </div>
+  </div>
+</section>
+
+<!-- 6. ONE GAME -->
+<section class="s-close scene" aria-labelledby="close-h">
+  <canvas class="air" data-air="fog" data-src="fog-lights" data-at="40 40" aria-hidden="true"></canvas>
+  <picture class="bg"><source media="(max-width:700px)" srcset="assets/photos/fog-lights-tall.webp"><img src="assets/photos/fog-lights-2400.webp" alt="" width="2400" height="1600" loading="lazy"></picture>
+  <div class="wrap">
+    <h2 id="close-h">Try it for a sample game</h2>
+    <div class="close-r">
+      <p>Run it once at your school.</p>
+      <div class="acts"><a class="btn accent" href="pricing.html#pilot">Book a sample game</a><a class="go" href="how-it-works.html">See how it works</a></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="dark">
+  <div class="wrap">
+    <nav class="foot-nav" id="footer-nav" aria-label="Footer">
+      <ul>
+        <li><a href="./" aria-current="page">Home</a></li>
+        <li><a href="how-it-works.html">How it works</a></li>
+        <li><a href="schools.html">For schools and privacy</a></li>
+        <li><a href="pricing.html">Pricing and pilot</a></li>
+        <li><a href="demo.html">Live demo</a></li>
+        <li><a href="/sentinel-preview/demo.html">Sign in</a></li>
+        <li><a href="schools.html#accessibility">Accessibility</a></li>
+        <li class="owner-todo"><a href="mailto:[[CONTACT EMAIL]]">[[CONTACT EMAIL]]</a></li>
+      </ul>
+    </nav>
+    <span><b>Sentinel</b>, attendance rewards for high school games.</span>
+    <span>Games, point values, students and prizes shown here are examples.</span>
+  </div>
+</footer>
+
+<!-- The app's own QR encoder, so the samples here match a real membership QR code -->
+<script src="vendor/qrcode.js"></script>
+<script src="shared/qr.js"></script>
+<script src="assets/home.js"></script>
+<script src="assets/scene.js"></script>
+</body>
+</html>

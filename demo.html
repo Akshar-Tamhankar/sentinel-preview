@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- Placeholders ([[SITE URL]], [[SOCIAL IMAGE PATH]], [[CONTACT EMAIL]]) are explained at the top of index.html.
+
+     Contract with the demo app (built in a separate repo):
+       /app/?demo=student   the student view
+       /app/?demo=staff     the gate worker view (scanning at the gate)
+       /app/?demo=admin     the athletics office admin view (games, members, prizes, pickups, export)
+     The demo runs fully in the browser with sample data, saves nothing to a server, and has a reset button.
+     Until /app/ is deployed next to this site, these links return a 404. That is expected.
+     If the app maps "staff" and "admin" differently, change the card text below, not the URLs. -->
+<title>Live demo | Sentinel</title>
+<meta name="description" content="Try Sentinel in your browser as a student, a gate worker or the athletics office. The demo uses sample data and saves nothing to a server." />
+<link rel="canonical" href="[[SITE URL]]/demo.html" />
+<meta name="theme-color" content="#06141B" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Sentinel" />
+<meta property="og:title" content="Try the Sentinel demo" />
+<meta property="og:description" content="Scan a sample student, reserve a prize and hand it out, right in your browser. Sample data only." />
+<meta property="og:url" content="[[SITE URL]]/demo.html" />
+<meta property="og:image" content="[[SITE URL]]/[[SOCIAL IMAGE PATH]]" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Sentinel: students earn points for attending games" />
+<meta property="og:locale" content="en_US" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Try the Sentinel demo" />
+<meta name="twitter:description" content="Scan a sample student, reserve a prize and hand it out, right in your browser. Sample data only." />
+<meta name="twitter:image" content="[[SITE URL]]/[[SOCIAL IMAGE PATH]]" />
+<meta name="twitter:image:alt" content="Sentinel: students earn points for attending games" />
+<link rel="preload" href="assets/fonts/sofia-sans-extra-condensed-latin-wght-5.3.0.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="assets/site.css" />
+<link rel="stylesheet" href="assets/pages.css" />
+<link rel="prefetch" href="how-it-works.html" />
+<link rel="prefetch" href="pricing.html" />
+<script src="assets/site.js" defer></script>
+</head>
+<body>
+<a class="sr skip" href="#main">Skip to content</a>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="./"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="4.5" r="3"/><circle cx="12" cy="4.5" r="3"/><circle cx="19" cy="4.5" r="3"/><circle cx="5" cy="12" r="3"/><circle cx="19" cy="12" r="3"/><path d="M11 16.5h2V24h-2z"/></g><circle cx="12" cy="12" r="3" fill="#FF6A3D"/></svg>Sentinel</a>
+    <nav aria-label="Main">
+      <a class="menu-btn" href="#footer-nav"><svg class="m" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" stroke-width="2" fill="none"/></svg><svg class="x" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="2" fill="none"/></svg>Menu</a>
+      <ul class="links" id="site-menu">
+        <li><a href="how-it-works.html">How it works</a></li>
+        <li><a href="schools.html">For schools</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="demo.html" aria-current="page">Live demo</a></li>
+        <li><a href="/sentinel-preview/demo.html">Sign in</a></li>
+        <li class="menu-cta"><a class="btn" href="pricing.html#pilot">Book a pilot</a></li>
+      </ul>
+    </nav>
+    <a class="btn" href="pricing.html#pilot">Book a pilot</a>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" aria-labelledby="h1">
+  <picture class="hero-img demo"><source media="(max-width:700px)" srcset="assets/photos/crowd-tall.webp"><img src="assets/photos/crowd-2400.webp" alt="" width="2400" height="1600"></picture>
+  <div class="wrap">
+    <div>
+      <h1 id="h1">Try it in your browser</h1>
+      <p class="lede">Pick a view. It opens the app with sample data. To come back, press Exit demo in the orange bar at the top.</p>
+    </div>
+    <dl class="tblock">
+      <div><dt>Data</dt><dd>Sample data only</dd></div>
+      <div><dt>Runs in</dt><dd>Your browser</dd></div>
+      <div><dt>Start over</dt><dd>The Reset demo button</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="sec" id="views" aria-labelledby="views-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="d2" id="views-h">Three views to try</h2>
+      <p class="lede">All three views share the same sample data, so a prize reserved as the student shows up for the athletics office.</p>
+    </div>
+    <ul class="views">
+      <li class="view">
+        <div class="view-top">
+          <h3>Student</h3>
+          <p class="for">See points, show a QR code and spend points in the reward shop.</p>
+        </div>
+        <div class="screen" role="img" aria-label="Preview of the student view with a sample student: 150 points, a QR code, and 100 points to go until a $10 gift card.">
+          <div class="screen-top">Ava Clark <span>Sample student</span></div>
+          <div class="two">
+            <div class="tile member"><div style="font-size:.85rem">Points</div><div class="num">150</div><svg viewBox="0 0 29 29" aria-hidden="true"><rect width="29" height="29" fill="#fff"/><path fill="#06141B" shape-rendering="crispEdges" d="M4 4h7v1h-7zM12 4h2v1h-2zM16 4h1v1h-1zM18 4h7v1h-7zM4 5h1v1h-1zM10 5h1v1h-1zM14 5h1v1h-1zM16 5h1v1h-1zM18 5h1v1h-1zM24 5h1v1h-1zM4 6h1v1h-1zM6 6h3v1h-3zM10 6h1v1h-1zM12 6h3v1h-3zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h3v1h-3zM24 6h1v1h-1zM4 7h1v1h-1zM6 7h3v1h-3zM10 7h1v1h-1zM12 7h1v1h-1zM16 7h1v1h-1zM18 7h1v1h-1zM20 7h3v1h-3zM24 7h1v1h-1zM4 8h1v1h-1zM6 8h3v1h-3zM10 8h1v1h-1zM13 8h4v1h-4zM18 8h1v1h-1zM20 8h3v1h-3zM24 8h1v1h-1zM4 9h1v1h-1zM10 9h1v1h-1zM12 9h1v1h-1zM16 9h1v1h-1zM18 9h1v1h-1zM24 9h1v1h-1zM4 10h7v1h-7zM12 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h7v1h-7zM12 11h1v1h-1zM16 11h1v1h-1zM5 12h1v1h-1zM7 12h1v1h-1zM9 12h4v1h-4zM14 12h1v1h-1zM17 12h3v1h-3zM21 12h2v1h-2zM24 12h1v1h-1zM6 13h3v1h-3zM11 13h1v1h-1zM13 13h1v1h-1zM16 13h1v1h-1zM18 13h2v1h-2zM23 13h1v1h-1zM4 14h4v1h-4zM10 14h1v1h-1zM13 14h2v1h-2zM17 14h2v1h-2zM21 14h1v1h-1zM23 14h2v1h-2zM4 15h3v1h-3zM8 15h1v1h-1zM11 15h1v1h-1zM17 15h2v1h-2zM24 15h1v1h-1zM6 16h5v1h-5zM14 16h1v1h-1zM18 16h1v1h-1zM20 16h1v1h-1zM22 16h3v1h-3zM12 17h2v1h-2zM15 17h2v1h-2zM20 17h1v1h-1zM22 17h1v1h-1zM24 17h1v1h-1zM4 18h7v1h-7zM12 18h1v1h-1zM14 18h1v1h-1zM16 18h1v1h-1zM19 18h1v1h-1zM21 18h2v1h-2zM4 19h1v1h-1zM10 19h1v1h-1zM12 19h3v1h-3zM16 19h2v1h-2zM19 19h1v1h-1zM22 19h3v1h-3zM4 20h1v1h-1zM6 20h3v1h-3zM10 20h1v1h-1zM13 20h1v1h-1zM15 20h1v1h-1zM17 20h2v1h-2zM20 20h2v1h-2zM24 20h1v1h-1zM4 21h1v1h-1zM6 21h3v1h-3zM10 21h1v1h-1zM12 21h1v1h-1zM15 21h1v1h-1zM22 21h3v1h-3zM4 22h1v1h-1zM6 22h3v1h-3zM10 22h1v1h-1zM16 22h1v1h-1zM21 22h2v1h-2zM24 22h1v1h-1zM4 23h1v1h-1zM10 23h1v1h-1zM12 23h3v1h-3zM17 23h2v1h-2zM20 23h1v1h-1zM22 23h1v1h-1zM24 23h1v1h-1zM4 24h7v1h-7zM14 24h3v1h-3zM19 24h3v1h-3z"/></svg></div>
+            <div class="tile"><div class="quiet" style="font-size:.85rem">Next prize</div><strong>$10 gift card</strong><div class="meter"><i style="width:60%"></i></div><div style="font-size:.85rem;margin-top:6px">100 points to go</div></div>
+          </div>
+        </div>
+        <h4 id="try-s">What to try</h4>
+        <ul class="try" aria-labelledby="try-s">
+          <li><label><input type="checkbox" /><span>Find your QR code and points balance.</span></label></li>
+          <li><label><input type="checkbox" /><span>Reserve a prize in the reward shop and watch the points come off.</span></label></li>
+          <li><label><input type="checkbox" /><span>Check the prize's pickup status.</span></label></li>
+        </ul>
+        <div class="gap"></div>
+        <div class="go">
+          <a class="btn" href="/sentinel-preview/app/?demo=student">Open the student view</a>
+        </div>
+      </li>
+
+      <li class="view">
+        <div class="view-top">
+          <h3>Gate worker</h3>
+          <p class="for">Check students in at the gate, the way a volunteer does on game night.</p>
+        </div>
+        <div class="screen" role="img" aria-label="Preview of the gate worker view: the gate is open, the camera is ready, and the list shows a check-in, a repeat and an inactive membership.">
+          <div class="screen-top">Football vs. Eastside <span class="pill">Gate open</span></div>
+          <div class="cam">Point the camera at a QR code</div>
+          <ul class="rows">
+            <li><span><b>Marcus Lee</b> 100871</span><span class="pill p">+50</span></li>
+            <li><span><b>Ava Clark</b> 100234</span><span class="pill r">Already checked in</span></li>
+            <li><span><b>Jordan Brooks</b> 101455</span><span class="pill r">Inactive membership</span></li>
+          </ul>
+        </div>
+        <h4 id="try-g">What to try</h4>
+        <ul class="try" aria-labelledby="try-g">
+          <li><label><input type="checkbox" /><span>Pick a sample student from the list, confirm admission and see the points added. No camera needed.</span></label></li>
+          <li><label><input type="checkbox" /><span>Check in the same student again. No extra points are added.</span></label></li>
+          <li><label><input type="checkbox" /><span>Find Jordan, whose membership isn't active. Jordan can't be checked in, so no points are added.</span></label></li>
+        </ul>
+        <div class="gap"></div>
+        <div class="go">
+          <a class="btn" href="/sentinel-preview/app/?demo=staff">Open the gate worker view</a>
+        </div>
+      </li>
+
+      <li class="view">
+        <div class="view-top">
+          <h3>Athletics office</h3>
+          <p class="for">Run games, members, prizes and pickups, and download the points history.</p>
+        </div>
+        <div class="screen" role="img" aria-label="Preview of the athletics office view with sample data: active members, prize pickups, games, and a points history download.">
+          <div class="screen-top">Program overview <span>Sample data</span></div>
+          <div class="two">
+            <div class="tile kpi"><div class="quiet" style="font-size:.85rem">Active members</div><div class="num">3</div></div>
+            <div class="tile kpi"><div class="quiet" style="font-size:.85rem">Prize pickups</div><div class="num">0</div></div>
+          </div>
+          <ul class="rows">
+            <li><span>Football vs. Eastside</span><span class="pill">Gate open</span></li>
+            <li><span>Points history</span><b>Export points log</b></li>
+          </ul>
+        </div>
+        <h4 id="try-a">What to try</h4>
+        <ul class="try" aria-labelledby="try-a">
+          <li><label><input type="checkbox" /><span>Reserve a prize in the student view first. Then open Prize pickups here and mark it handed out.</span></label></li>
+          <li><label><input type="checkbox" /><span>Cancel a reservation that hasn't been picked up and see the points go back to the student.</span></label></li>
+          <li><label><input type="checkbox" /><span>Replace a lost QR code in Members. The old one stops working.</span></label></li>
+          <li><label><input type="checkbox" /><span>Download the points history with Export points log. It's a CSV (comma-separated values) file, which opens in any spreadsheet app.</span></label></li>
+          <li><label><input type="checkbox" /><span>Open Account access. In the demo, Coach Nelson is the head admin, the only person who can change roles and ban accounts.</span></label></li>
+        </ul>
+        <div class="gap"></div>
+        <div class="go">
+          <a class="btn" href="/sentinel-preview/app/?demo=admin">Open the athletics office view</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="sec white" id="about-demo" aria-labelledby="about-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 class="d2" id="about-h">About the demo</h2>
+      <p class="lede">Nothing here reaches a real school or student.</p>
+    </div>
+    <ul class="facts">
+      <li><b>Sample data only</b>The students, games, prizes and points are made up. Names like Ava Clark and Jordan Brooks are samples.</li>
+      <li><b>Nothing goes to a server</b>The demo runs fully in your browser and keeps its sample data there. Nothing you do in it is sent to a server.</li>
+      <li><b>Reset any time</b>The Reset demo button in the orange bar puts all the sample data back the way it started.</li>
+    </ul>
+    <p class="more"><a class="btn" href="pricing.html#pilot">Book a pilot</a><a class="btn line" href="how-it-works.html">Read how it works</a></p>
+  </div>
+</section>
+</main>
+
+<footer class="dark">
+  <div class="wrap">
+    <nav class="foot-nav" id="footer-nav" aria-label="Footer">
+      <ul>
+        <li><a href="./">Home</a></li>
+        <li><a href="how-it-works.html">How it works</a></li>
+        <li><a href="schools.html">For schools and privacy</a></li>
+        <li><a href="pricing.html">Pricing and pilot</a></li>
+        <li><a href="demo.html" aria-current="page">Live demo</a></li>
+        <li><a href="/sentinel-preview/demo.html">Sign in</a></li>
+        <li><a href="schools.html#accessibility">Accessibility</a></li>
+        <li class="owner-todo"><a href="mailto:[[CONTACT EMAIL]]">[[CONTACT EMAIL]]</a></li>
+      </ul>
+    </nav>
+    <span><b>Sentinel</b>, attendance rewards for high school games.</span>
+    <span>Games, point values, students and prizes shown here are examples.</span>
+  </div>
+</footer>
+</body>
+</html>
