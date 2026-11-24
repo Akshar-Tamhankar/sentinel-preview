@@ -56,219 +56,64 @@
 </header>
 
 <main id="main">
-<section class="hero" aria-labelledby="h1">
-  <picture class="hero-img pricing"><source media="(max-width:700px)" srcset="assets/photos/bleachers-tall.webp"><img src="assets/photos/bleachers-2400.webp" alt="" width="2400" height="1600"></picture>
+<!-- PLANS: keep every data-confirm span and [[...]] value as drafted. -->
+<section class="hero plans" id="pricing" aria-labelledby="h1">
+  <picture class="hero-img pricing"><source media="(max-width:900px)" srcset="assets/photos/bleachers-tall.webp"><img src="assets/photos/bleachers-2400.webp" alt="" width="2400" height="1600"></picture>
   <div class="wrap">
-    <div>
-      <h1 id="h1">Pricing and pilot</h1>
-      <p class="lede">Start with one game. Plans after that cover a season or a district.</p>
-      <nav class="onpage" aria-label="On this page">
-        <ul>
-          <li><a href="#pricing">Plans</a></li>
-          <li><a href="#weeks">What a pilot includes</a></li>
-          <li><a href="#faq">Questions</a></li>
-          <li><a href="#pilot">Book a pilot</a></li>
-        </ul>
-      </nav>
+    <div class="say">
+      <h1 id="h1">Pricing</h1>
+      <p class="lede">Start with one game. Gate workers use their own phones, so there's no hardware to buy.</p>
     </div>
-    <dl class="tblock">
-      <div><dt>Start with</dt><dd>One game</dd></div>
-      <div><dt>You need</dt><dd>A few gate volunteers with phones and a short list of prizes</dd></div>
-      <div><dt>You don't need</dt><dd>Scanners, tablets or app installs</dd></div>
-    </dl>
-  </div>
-</section>
-
-<!-- PLANS: moved here in full from the home page. Keep every data-confirm span and [[...]] value as drafted. -->
-<section class="pr" id="pricing" aria-labelledby="pr-h">
-  <div class="wrap">
-    <div class="pr-head">
-      <h2 class="d2" id="pr-h">Plans</h2>
-      <p class="lede">Gate workers use their own phones, so there's no hardware to buy.</p>
-    </div>
-
     <ul class="pr-plans">
-      <li class="pr-plan">
-        <div class="m">
-          <h3>Pilot</h3>
-          <p class="pr-for">One game at one school</p>
-        </div>
-        <div class="pr-cost">
-          <span class="num"><span class="tr-ph">[[PRICE: pilot, one home game]]</span></span>
-        </div>
+      <li class="pr-plan first">
+        <h2>Pilot</h2>
+        <p class="pr-for">One game, one school</p>
+        <p class="pr-cost"><span class="tr-ph">[[PRICE: pilot, one home game]]</span></p>
         <ul>
-          <li>We set up your school and your reward shop</li>
-          <li>Students sign up and print their QR codes the week before</li>
-          <li>The attendance and points report the Monday after</li>
+          <li>We set up your school and reward shop</li>
+          <li>Attendance and points report the Monday after</li>
         </ul>
-        <p class="pr-next">Then you decide whether to run it for the season.</p>
+        <a class="btn" href="#pilot">Book a pilot</a>
       </li>
       <li class="pr-plan">
-        <div class="m">
-          <h3>Season</h3>
-          <p class="pr-for">One school, one sports season</p>
-        </div>
-        <div class="pr-cost">
-          <span class="num"><span class="tr-ph">[[PRICE: per school, per season]]</span></span>
-        </div>
+        <h2>Season</h2>
+        <p class="pr-for">One school, one sports season</p>
+        <p class="pr-cost"><span class="tr-ph">[[PRICE: per school, per season]]</span></p>
         <ul>
           <li><span data-confirm="season-all-games">Every home game in the season</span></li>
           <li><span data-confirm="season-all-accounts">All the student, gate worker and admin accounts your school needs</span></li>
-          <li>The full points history, ready to download as a spreadsheet</li>
+          <li>Points history as a spreadsheet</li>
         </ul>
       </li>
       <li class="pr-plan">
-        <div class="m">
-          <h3>District</h3>
-          <p class="pr-for">Two or more schools</p>
-        </div>
-        <div class="pr-cost">
-          <span class="num"><span class="tr-ph">[[PRICE: district, two or more schools]]</span></span>
-        </div>
+        <h2>District</h2>
+        <p class="pr-for">Two or more schools</p>
+        <p class="pr-cost"><span class="tr-ph">[[PRICE: district, two or more schools]]</span></p>
         <ul>
           <li><span data-confirm="district-one-agreement">One contract and one data privacy agreement for every school</span></li>
-          <li>Each school runs its own games, members and reward shop</li>
+          <li>Each school runs its own games and shop</li>
         </ul>
       </li>
     </ul>
-
-    <dl class="pr-notes">
-      <div>
-        <dt>Prizes</dt>
-        <dd><span data-confirm="prizes-not-included">Prizes aren't included in the price. Your school, booster club or sponsors choose and supply them.</span></dd>
-      </div>
-      <div>
-        <dt>How to pay</dt>
-        <dd><span class="tr-ph">[[PAYMENT TERMS: e.g. invoice or purchase order]]</span></dd>
-      </div>
-      <div>
-        <dt>Your costs besides the price</dt>
-        <dd>No scanners, tablets or app installs. You need a few gate volunteers with phones and a short list of prizes.</dd>
-      </div>
-    </dl>
-
-    <div class="pr-cta"><a class="btn" href="#pilot">Book a pilot</a><a class="btn line" href="schools.html">For schools</a></div>
   </div>
 </section>
 
-<!-- THE PILOT, PHASE BY PHASE -->
-<section class="sec white" id="weeks" aria-labelledby="weeks-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2 class="d2" id="weeks-h">What a pilot includes</h2>
-      <p class="lede">One game at one school, from the call to the report.</p>
-    </div>
-    <ol class="weeks">
-      <li>
-        <p class="when">When you book</p>
-        <h3>A call</h3>
-        <dl>
-          <dt>We</dt><dd>Call you to plan the game.</dd>
-          <dt>You</dt><dd>Pick the game, and tell us which items in <a href="schools.html#rollout">before a full rollout</a> your district needs first.</dd>
-        </dl>
-      </li>
-      <li>
-        <p class="when">The week before</p>
-        <h3>Setup</h3>
-        <dl>
-          <dt>We</dt><dd>Set up your school and your reward shop.</dd>
-          <dt>You</dt><dd>Choose a short list of prizes and a few gate volunteers. Your office activates student memberships.</dd>
-          <dt>Students</dt><dd>Sign up and print their QR codes.</dd>
-        </dl>
-      </li>
-      <li>
-        <p class="when">Game night</p>
-        <h3>The gate</h3>
-        <dl>
-          <dt>Gate workers</dt><dd>Check tickets as usual, then scan QR codes on their phones.</dd>
-          <dt>Students</dt><dd>Get points as they walk in.</dd>
-        </dl>
-      </li>
-      <li>
-        <p class="when">The Monday after</p>
-        <h3>The report</h3>
-        <dl>
-          <dt>We</dt><dd>Send the attendance and points report.</dd>
-          <dt>Students</dt><dd>Can start reserving prizes. Your office hands them out.</dd>
-        </dl>
-      </li>
-      <li>
-        <p class="when">Then</p>
-        <h3>You decide</h3>
-        <dl>
-          <dt>You</dt><dd>Choose whether to run it for the season.</dd>
-        </dl>
-      </li>
-    </ol>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="sec" id="faq" aria-labelledby="faq-h">
-  <div class="wrap">
-    <div class="sec-head">
-      <h2 class="d2" id="faq-h">Questions about cost</h2>
-      <p class="lede">Anything marked "not set yet" hasn't been decided.</p>
-    </div>
-    <div class="faq">
-      <details>
-        <summary>Who pays for the prizes?</summary>
-        <div class="a">
-          <p>See the "Prizes" note under the plans above. Either way, your school picks the prizes, sets how many points each one costs and decides how many are in stock.</p>
-          <p>Prizes can be small. The samples on this site are a $5 concession voucher, a $10 gift card and a spirit T-shirt.</p>
-        </div>
-      </details>
-      <details>
-        <summary>Can our booster club pay instead of the school?</summary>
-        <div class="a">
-          <p><span data-confirm="booster-can-pay">Yes. A booster club or a sponsor can pay for a plan instead of the school.</span> Tell us who will pay when you book. How to pay: <span class="tr-ph">[[PAYMENT TERMS: e.g. invoice or purchase order]]</span></p>
-          <p>Booster clubs and sponsors can also supply prizes.</p>
-        </div>
-      </details>
-      <details>
-        <summary>Is the pilot free?</summary>
-        <div class="a"><p>The pilot price is on the Pilot plan above.</p></div>
-      </details>
-      <details>
-        <summary>What happens after the pilot?</summary>
-        <div class="a"><p>You decide whether to run it for the season. <span data-confirm="pilot-no-renewal">Nothing continues or renews unless you choose a plan.</span></p></div>
-      </details>
-      <details>
-        <summary>How do we cancel?</summary>
-        <div class="a">
-          <p><span class="tr-ph">[[CANCEL TERMS: how to cancel, notice needed, and any refund]]</span></p>
-          <p>What happens to your students' data when you stop is on the <a href="schools.html#promises">for schools page</a>.</p>
-        </div>
-      </details>
-      <details>
-        <summary>Do we need to buy any hardware?</summary>
-        <div class="a"><p>No. Gate workers use the camera on their own phones, in a web browser. There's no app to install.</p></div>
-      </details>
-      <details>
-        <summary>Does our district have to approve it first?</summary>
-        <div class="a"><p>Many districts review an app before students use it. The <a href="schools.html">for schools page</a> is written for that review and prints cleanly. Tell us on the call what your district asks for.</p></div>
-      </details>
-      <details>
-        <summary>Can we pilot at a sport other than football?</summary>
-        <div class="a"><p>Yes. Your office creates the game in the app, so pick the game that suits you.</p></div>
-      </details>
-    </div>
-  </div>
-</section>
-
-<!-- PILOT FORM: same markup and handler as the home page (assets/site.js, form.pilot-form). It sends nothing yet. -->
+<!-- THE PILOT, and the form that books it -->
 <section class="pilot sec" id="pilot" aria-labelledby="pi-h">
   <div class="wrap">
     <div>
-      <h2 class="d2" id="pi-h">Try it at one game</h2>
-      <p class="lede" style="margin-top:22px">You need one game, a few gate volunteers and a short list of prizes.</p>
-      <p style="margin-top:18px">Want to see it first? <a href="demo.html">Try the live demo</a> with sample data.</p>
+      <h2 class="d2" id="pi-h">How a pilot goes</h2>
+      <ol class="plan" id="weeks">
+        <li><h3>You book</h3><p>We call you to plan one game.</p></li>
+        <li><h3>The week before</h3><p>We set up your school. You pick prizes and a few gate volunteers. Students sign up.</p></li>
+        <li><h3>Game night</h3><p>Volunteers scan. Students get points.</p></li>
+        <li><h3>The Monday after</h3><p>You get the report, students start reserving prizes, and you decide on a season.</p></li>
+      </ol>
     </div>
     <!-- data-to is the only setting. While it is still a [[placeholder]] the form says it isn't connected. Once it is an
          email address, Book a pilot opens the visitor's own mail app with the request filled in (site.js). -->
     <form id="pilot-form" class="pilot-form" data-to="[[CONTACT EMAIL]]" novalidate>
       <h3 class="d3">Book a pilot</h3>
-      <p class="quiet" style="font-size:.92rem;margin-top:6px">Tell us about your school and we'll set up a call.</p>
       <label for="f-school">School</label>
       <input id="f-school" name="school" autocomplete="organization" required aria-describedby="e-school" />
       <p class="err" id="e-school" aria-live="polite"></p>
@@ -280,6 +125,20 @@
       <button class="btn" type="submit">Book a pilot</button>
       <p class="done" id="done" aria-live="polite"></p>
     </form>
+  </div>
+</section>
+
+<section class="sec" id="faq" aria-labelledby="faq-h">
+  <div class="wrap">
+    <h2 class="d2" id="faq-h">Questions about cost</h2>
+    <dl class="qa">
+      <div><dt>Who pays for prizes?</dt><dd><span data-confirm="prizes-not-included">Prizes aren't included in the price. Your school, booster club or sponsors choose and supply them.</span></dd></div>
+      <div><dt>Can boosters pay?</dt><dd><span data-confirm="booster-can-pay">Yes. A booster club or a sponsor can pay for a plan instead of the school.</span></dd></div>
+      <div><dt>How do we pay?</dt><dd><span class="tr-ph">[[PAYMENT TERMS: e.g. invoice or purchase order]]</span></dd></div>
+      <div><dt>How do we cancel?</dt><dd><span class="tr-ph">[[CANCEL TERMS: how to cancel, notice needed, and any refund]]</span></dd></div>
+      <div><dt>Does the pilot renew?</dt><dd><span data-confirm="pilot-no-renewal">Nothing continues or renews unless you choose a plan.</span></dd></div>
+      <div><dt>Does our district approve it first?</dt><dd>Many do. <a href="schools.html">For schools</a> is written for that review.</dd></div>
+    </dl>
   </div>
 </section>
 </main>

@@ -55,143 +55,75 @@
 
 <main id="main">
 <section class="hero" aria-labelledby="h1">
-  <picture class="hero-img schools"><source media="(max-width:700px)" srcset="assets/photos/light-tower-tall.webp"><img src="assets/photos/light-tower-2400.webp" alt="" width="2400" height="1603"></picture>
+  <picture class="hero-img schools"><source media="(max-width:900px)" srcset="assets/photos/light-tower-tall.webp"><img src="assets/photos/light-tower-2400.webp" alt="" width="2400" height="1603"></picture>
   <div class="wrap">
-    <div>
+    <div class="say">
       <p class="print-only spec">Sentinel. Printed from [[SITE URL]]/schools.html. Check the web page for the latest version.</p>
       <h1 id="h1">For schools</h1>
-      <p class="lede">Every field the app stores, who can see it, how it's protected, and what's left to do. The page prints cleanly for your district.</p>
+      <p class="lede">What the app stores, who can see it, and what isn't finished.</p>
       <div class="cta">
-        <button class="btn" type="button" data-print hidden>Print this page</button>
-        <a class="btn line" href="pricing.html#pilot">Book a pilot</a>
+        <a class="btn" href="pricing.html#pilot">Book a pilot</a>
+        <button class="btn line" type="button" data-print hidden>Print this page</button>
       </div>
-      <nav class="onpage" aria-label="On this page">
-        <ul>
-          <li><a href="#tr-data-h">What the app stores</a></li>
-          <li><a href="#tr-two">What it doesn't do</a></li>
-          <li><a href="#security">Security today</a></li>
-          <li><a href="#promises">Our promises</a></li>
-          <li><a href="#rollout">Before a full rollout</a></li>
-          <li><a href="#accessibility">Accessibility</a></li>
-        </ul>
-      </nav>
+      <p class="owner-todo"><a href="mailto:[[CONTACT EMAIL]]">[[CONTACT EMAIL]]</a></p>
     </div>
-    <dl class="tblock">
-      <div><dt>For</dt><dd>Athletic directors, principals, district technology and privacy staff</dd></div>
-      <div><dt>Status</dt><dd>New product. One school so far.</dd></div>
-      <div class="owner-todo"><dt>Questions</dt><dd><a href="mailto:[[CONTACT EMAIL]]">[[CONTACT EMAIL]]</a></dd></div>
+  </div>
+</section>
+
+<section class="sec" id="data" aria-labelledby="data-h">
+  <div class="wrap">
+    <h2 class="d2" id="data-h">What the app stores</h2>
+    <dl class="tiles">
+      <div><dt>Name</dt><dd>To find the right student.</dd></div>
+      <div><dt>Email</dt><dd>To sign in.</dd></div>
+      <div><dt>Student ID number</dt><dd>To match your records.</dd></div>
+      <div><dt>Membership</dt><dd>A random code, its status and when it expires.</dd></div>
+      <div><dt>Attendance</dt><dd>Game, time, who checked them in, and by QR code or by hand.</dd></div>
+      <div><dt>Points history</dt><dd>Every change, who made it and why.</dd></div>
+      <div><dt>Prizes</dt><dd>What's reserved and what's picked up.</dd></div>
+      <div class="none"><dt>Nothing else</dt><dd>No address, phone number, birth date or grades. The new sign-in will add a password.</dd></div>
     </dl>
   </div>
 </section>
 
-<!-- STUDENT DATA, PRIVACY AND ACCESSIBILITY: moved here in full from the home page. Keep every data-confirm span and [[...]] value as drafted. -->
-<section class="tr" id="districts" aria-labelledby="tr-h">
+<section class="sec white" id="access" aria-labelledby="access-h">
   <div class="wrap">
-    <div class="tr-head">
-      <h2 class="d2" id="tr-h">Student data and privacy</h2>
-      <p class="lede">What the app stores and what it doesn't do.</p>
-    </div>
+    <h2 class="d2" id="access-h">Who can do what</h2>
+    <p class="lede">Your school sets every role. No one can pick their own.</p>
+    <table class="matrix">
+      <thead><tr><td></td><th scope="col">Student</th><th scope="col">Gate worker</th><th scope="col">Office</th><th scope="col">Head admin</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">See points and reserve prizes</th><td>Own</td><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><span class="sr">No</span></td></tr>
+        <tr><th scope="row">Find students and check them in</th><td><span class="sr">No</span></td><td><i class="yes"></i><span class="sr">Yes</span></td><td><i class="yes"></i><span class="sr">Yes</span></td><td><i class="yes"></i><span class="sr">Yes</span></td></tr>
+        <tr><th scope="row">Run games and open the gate</th><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><i class="yes"></i><span class="sr">Yes</span></td><td><i class="yes"></i><span class="sr">Yes</span></td></tr>
+        <tr><th scope="row">Activate memberships</th><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><i class="yes"></i><span class="sr">Yes</span></td><td><i class="yes"></i><span class="sr">Yes</span></td></tr>
+        <tr><th scope="row">Replace a QR code</th><td>Own</td><td><span class="sr">No</span></td><td><i class="yes"></i><span class="sr">Yes</span></td><td><i class="yes"></i><span class="sr">Yes</span></td></tr>
+        <tr><th scope="row">Stock and hand out prizes</th><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><i class="yes"></i><span class="sr">Yes</span></td><td><i class="yes"></i><span class="sr">Yes</span></td></tr>
+        <tr><th scope="row">Correct points, with a reason</th><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><i class="yes"></i><span class="sr">Yes</span></td><td><i class="yes"></i><span class="sr">Yes</span></td></tr>
+        <tr><th scope="row">Add staff, change roles, ban accounts</th><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><i class="yes"></i><span class="sr">Yes</span></td></tr>
+        <tr><th scope="row">Read the access log</th><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><span class="sr">No</span></td><td><i class="yes"></i><span class="sr">Yes</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
-    <!-- what is stored, field by field -->
-    <div class="tr-block">
-      <h3 class="d3" id="tr-data-h">What the app stores about each student</h3>
-      <p class="tr-intro">Every field below is used for check-in, points or prizes. The app stores nothing else about students.</p>
-      <table class="tr-table" role="table" aria-labelledby="tr-data-h">
-        <caption>These are the fields the app stores about a student today.</caption>
-        <thead role="rowgroup">
-          <tr role="row">
-            <th scope="col" role="columnheader">Field</th>
-            <th scope="col" role="columnheader">What it holds</th>
-            <th scope="col" role="columnheader">Why it's needed</th>
-          </tr>
-        </thead>
-        <tbody role="rowgroup">
-          <tr role="row">
-            <th scope="row" role="rowheader">Name</th>
-            <td role="cell" data-label="What it holds">The student's name</td>
-            <td role="cell" data-label="Why it's needed">So staff know they have the right student, and can find a student by name if a QR code won't scan.</td>
-          </tr>
-          <tr role="row">
-            <th scope="row" role="rowheader">Email</th>
-            <td role="cell" data-label="What it holds">The student's email address</td>
-            <td role="cell" data-label="Why it's needed">So the student can sign in. With the new sign-in, it also gets the one-time sign-in code.</td>
-          </tr>
-          <tr role="row">
-            <th scope="row" role="rowheader">Student ID number</th>
-            <td role="cell" data-label="What it holds">The ID number your school issued</td>
-            <td role="cell" data-label="Why it's needed">So staff can match the account to a student at your school, and look a student up at the gate.</td>
-          </tr>
-          <tr role="row">
-            <th scope="row" role="rowheader">Membership</th>
-            <td role="cell" data-label="What it holds">A random membership code (what the QR code holds), whether the membership is active, and when it expires</td>
-            <td role="cell" data-label="Why it's needed">So a scan finds the right account without the student's name in the QR code, and only active members earn points.</td>
-          </tr>
-          <tr role="row">
-            <th scope="row" role="rowheader">Attendance</th>
-            <td role="cell" data-label="What it holds">Which game, what time, which staff member checked the student in, and whether by QR code or by hand</td>
-            <td role="cell" data-label="Why it's needed">So a student earns points once per game, and every check-in can be traced to the person who made it.</td>
-          </tr>
-          <tr role="row">
-            <th scope="row" role="rowheader">Points history</th>
-            <td role="cell" data-label="What it holds">Every award, purchase, refund and correction, with who made it and the reason</td>
-            <td role="cell" data-label="Why it's needed">So any balance can be checked line by line, and no one can change points without a record.</td>
-          </tr>
-          <tr role="row">
-            <th scope="row" role="rowheader">Prize reservations</th>
-            <td role="cell" data-label="What it holds">Which prize the student reserved, and whether it's been picked up</td>
-            <td role="cell" data-label="Why it's needed">So no prize is promised twice, and points go back if a pickup is canceled.</td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="tr-after quiet">The app doesn't ask for a home address, phone number, birth date or grades. When the new sign-in goes live, each account will also have a password.</p>
+<!-- owner commitments: every data-confirm line needs the owner's yes -->
+<section class="sec" aria-label="Security and promises">
+  <div class="wrap split">
+    <div id="security">
+      <h2 class="d2" id="sec-h">In place today</h2>
+    <ul class="tr-checks">
+      <li><span>The QR code is random. It isn't a password.</span></li>
+      <li><span>A replaced code stops working at once, printed copies and screenshots too.</span></li>
+      <li><span>Points once per student, per game, even if scans arrive together.</span></li>
+      <li><span>Every points change is recorded with who and why.</span></li>
+      <li><span>No ads, analytics or outside scripts.</span></li>
+      <li><span>No connection to GoFan or any ticketing system.</span></li>
+    </ul>
     </div>
-
-    <!-- what it doesn't do / who can see what -->
-    <div class="tr-block tr-two" id="tr-two">
-      <div class="tr-block">
-        <h3 class="d3">What the app doesn't do</h3>
-        <ul class="tr-nos">
-          <li><span><b>No personal details in the QR code</b>The QR code holds only a random code. It isn't a password, and it doesn't hold a name or a points balance.</span></li>
-          <li><span><b>No ads, analytics or outside scripts</b>The app loads no ad code, analytics or scripts from other companies. Its scanner and QR code software are served from the app's own server.</span></li>
-          <li><span><b>No link to your ticketing</b>The app doesn't connect to GoFan or any ticketing system. Staff confirm admission the way they do now.</span></li>
-          <li><span><b>No app to install, no hardware to buy</b>Gate workers use the camera in a web browser on their phone.</span></li>
-        </ul>
-      </div>
-      <div class="tr-block">
-        <h3 class="d3">Who can see and change what</h3>
-        <dl class="tr-dl">
-          <dt>The school sets every role</dt>
-          <dd>Each person is a student, gate worker, admin or head admin. Roles are set on the server by the school, so no one can pick their own.</dd>
-          <dt>Some powers belong to the head admin only</dt>
-          <dd>Only the head admin can add admins or gate workers, ban an account or read the access log.</dd>
-          <dt>Point changes leave a record</dt>
-          <dd>A staff member can't correct a balance without writing down why.</dd>
-          <dt>Sign-in with a code <span class="tr-state">Built, not live yet</span></dt>
-          <dd>Staff and students will sign in with an email and password, then a one-time code sent by email. Sessions end after 12 hours. Sign-in cookies can't be read by scripts on the page.</dd>
-        </dl>
-      </div>
-    </div>
-
-    <!-- security today: only facts stated elsewhere on the site; gaps are listed under "Before a full rollout" -->
-    <div class="tr-block" id="security">
-      <h3 class="d3" id="tr-sec-h">Security today</h3>
-      <p class="tr-intro">What the app does now. The rest is under "Before a full rollout" below.</p>
-      <ul class="tr-checks">
-        <li><span>Roles are set on the server by the school, so no one can pick their own.</span></li>
-        <li><span>Only the head admin can add admins or gate workers, ban an account or read the access log.</span></li>
-        <li><span>A student earns points once per game, even when several scans of the same QR code arrive at once.</span></li>
-        <li><span>Every award, purchase, refund and correction is recorded with who made it and why.</span></li>
-        <li><span>Replacing a QR code cancels the old one right away, including printed copies and screenshots.</span></li>
-        <li><span>The QR code holds only a random code. It isn't a password, and it doesn't hold a name or a points balance.</span></li>
-        <li><span>The app loads no ad code, analytics or scripts from other companies.</span></li>
-        <li><span>The new sign-in adds a one-time code sent by email, ends sessions after 12 hours, and keeps sign-in cookies out of reach of scripts on the page. It's built, not live yet.</span></li>
-      </ul>
-    </div>
-
-    <!-- owner commitments: every line needs the owner's yes (see NOTES.md) -->
-    <div class="tr-block tr-promise" id="promises">
-      <h3 class="d3" id="tr-promise-h">What we promise your district</h3>
-      <ul class="tr-checks">
+    <div id="promises">
+      <h2 class="d2" id="promise-h">What we promise</h2>
+    <ul class="tr-checks">
         <li><span data-confirm="no-sale">We never sell student data.</span></li>
         <li><span data-confirm="no-ads-no-profiles">We don't use student data for advertising, and we don't build profiles of students.</span></li>
         <li><span data-confirm="purpose-only">We use student data only to run the rewards program for your school.</span></li>
@@ -204,67 +136,36 @@
         <li><span data-confirm="security-questionnaire">We'll answer your district's security questionnaire in writing.</span></li>
       </ul>
     </div>
-
-    <!-- honest gaps, framed as what a pilot is for -->
-    <div class="tr-block tr-road" id="rollout">
-      <h3 class="d3" id="tr-road-h">Before a full rollout</h3>
-      <p class="tr-intro">Sentinel is new. This is the work left before it's ready for a full school year or a district.</p>
-      <ul class="tr-left">
-        <li>
-          <div><h4>Hosting and backups</h4><span class="tr-state">Not done yet</span></div>
-          <p>Today the app runs as a demo on a single server. A school rollout needs a proper database, backups and stable, secure (HTTPS) hosting.</p>
-        </li>
-        <li>
-          <div><h4>Keeping and deleting data</h4><span class="tr-state">Not done yet</span></div>
-          <p>There isn't a written policy yet for how long student data is kept or when it's deleted. Data handling also needs your school's approval.</p>
-        </li>
-        <li>
-          <div><h4>Sign-in with a code</h4><span class="tr-state built">Built, not live yet</span></div>
-          <p>Email and password, then a one-time code sent by email. It's built but not turned on yet.</p>
-        </li>
-        <li>
-          <div><h4>Privacy law review</h4><span class="tr-state">Not done yet</span></div>
-          <p>The app hasn't had a formal review against FERPA or COPPA (the US law on collecting data from children under 13).</p>
-        </li>
-        <li>
-          <div><h4>Security audit</h4><span class="tr-state">Not done yet</span></div>
-          <p>There's no outside security audit yet, such as a SOC 2 (System and Organization Controls 2) report. We can describe how the app protects data, as this page does.</p>
-        </li>
-        <li>
-          <div><h4>Accessibility report</h4><span class="tr-state">Not done yet</span></div>
-          <p>There's no formal accessibility report for the app yet. The accessibility statement below covers this website.</p>
-        </li>
-        <li>
-          <div><h4>References and results</h4><span class="tr-state">One school</span></div>
-          <p>It has been used at one school so far. We don't have references from other districts or from a full year, and we haven't measured attendance results yet.</p>
-        </li>
-      </ul>
-      <p class="tr-close">When you book a pilot, tell us which of these your district needs before the first game.</p>
-    </div>
-
-    <!-- accessibility statement -->
-    <div class="tr-block tr-a11y" id="accessibility">
-      <div>
-        <h3 class="d3" id="tr-a11y-h">Accessibility</h3>
-        <p class="tr-intro">What's done on this site, and what isn't done yet.</p>
-      </div>
-      <div>
-        <h4>What we've done on this site</h4>
-        <ul>
-          <li>Every link, button and form field works with a keyboard. On small screens, the Menu button opens the site links, and the Escape key closes them.</li>
-          <li>A thick outline shows which item has keyboard focus.</li>
-          <li>A skip link at the top of every page jumps straight to the main content.</li>
-          <li>If your device is set to reduce motion, the scenes on the home page show finished frames instead of moving, and the small animations on other pages stay off.</li>
-          <li>Text and background colors meet the WCAG 2.1 AA contrast minimum. WCAG is the Web Content Accessibility Guidelines, the standard most districts ask for.</li>
-        </ul>
-        <h4>What isn't done yet</h4>
-        <p>We don't have a formal conformance report yet, for this site or for the app. That report is often called a VPAT (Voluntary Product Accessibility Template) or an Accessibility Conformance Report. The app hasn't been formally checked against WCAG 2.1 AA.</p>
-        <h4>Report a barrier</h4>
-        <p>If something on this site or in the app gets in your way, email <a href="mailto:[[CONTACT EMAIL]]"><span class="tr-ph">[[CONTACT EMAIL]]</span></a>. Tell us the page and what happened. <span data-confirm="a11y-reply-time">We'll reply within <span class="tr-ph">[[REPLY TIME: e.g. 3 school days]]</span>.</span></p>
-      </div>
-    </div>
   </div>
 </section>
+
+<!-- honest gaps -->
+<section class="sec dark road" id="rollout" aria-labelledby="road-h">
+  <div class="wrap">
+    <h2 class="d2" id="road-h">Not finished yet</h2>
+    <p class="lede">Sentinel is new. Tell us which of these your district needs before the first game.</p>
+    <ul class="todo">
+        <li><h3>Hosting and backups <span class="tr-state">Not done</span></h3><p>Runs as a demo on one server. A school needs a proper database, backups and secure (HTTPS) hosting.</p></li>
+        <li><h3>Keeping and deleting data <span class="tr-state">Not done</span></h3><p>No written policy yet, and your school has to approve how data is handled.</p></li>
+        <li><h3>Sign-in with a code <span class="tr-state">Built, not live</span></h3><p>Email, password and a one-time code.</p></li>
+        <li><h3>Privacy law review <span class="tr-state">Not done</span></h3><p>No formal FERPA or COPPA review.</p></li>
+        <li><h3>Security audit <span class="tr-state">Not done</span></h3><p>No outside audit, such as SOC 2.</p></li>
+        <li><h3>References and results <span class="tr-state">One school</span></h3><p>No references from other districts, no full year, and no measured attendance results.</p></li>
+    </ul>
+  </div>
+</section>
+
+<section class="sec white" id="accessibility" aria-labelledby="a11y-h">
+  <div class="wrap">
+    <h2 class="d2" id="a11y-h">Accessibility</h2>
+    <dl class="qa">
+      <div><dt>On this site</dt><dd>Everything works by keyboard with a visible focus outline. Text meets WCAG 2.1 AA contrast. Reduced motion is respected.</dd></div>
+      <div><dt>Not done</dt><dd>There's no formal report (VPAT) for the site or the app, and the app hasn't been formally checked.</dd></div>
+      <div><dt>Report a problem</dt><dd>Email <a href="mailto:[[CONTACT EMAIL]]"><span class="tr-ph">[[CONTACT EMAIL]]</span></a> with the page and what happened. <span data-confirm="a11y-reply-time">We'll reply within <span class="tr-ph">[[REPLY TIME: e.g. 3 school days]]</span>.</span></dd></div>
+    </dl>
+  </div>
+</section>
+<section class="end-cta" aria-labelledby="end-h"><div class="wrap"><h2 class="d2" id="end-h">Try it at one game</h2><a class="btn" href="pricing.html#pilot">Book a pilot</a></div></section>
 </main>
 
 <footer class="dark">

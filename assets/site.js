@@ -69,6 +69,30 @@
     });
   });
 
+  /* ---------- how it works: the phone follows the steps on its own until someone picks one ---------- */
+  const walk = $(".walk");
+  if (walk) {
+    const btns = $$("button", walk), shots = $$(".walk-phone img");
+    let at = 0, timer = 0, mine = matchMedia("(prefers-reduced-motion: reduce)").matches, seen = false;
+    const show = n => {
+      at = n;
+      btns.forEach((b, i) => i === n ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current"));
+      shots.forEach((s, i) => s.classList.toggle("on", i === n));
+    };
+    const run = () => {
+      clearInterval(timer);
+      const go = seen && !mine;
+      walk.classList.toggle("auto", go);
+      if (go) timer = setInterval(() => show((at + 1) % btns.length), 4000);
+    };
+    btns.forEach((b, i) => {
+      b.addEventListener("click", () => { mine = true; run(); show(i); });
+      b.addEventListener("focus", () => { if (b.matches(":focus-visible")) { mine = true; run(); show(i); } });
+    });
+    if ("IntersectionObserver" in window) new IntersectionObserver(es => { seen = es[0].isIntersecting; run(); }, { threshold: .3 }).observe(walk);
+    shots.forEach(s => { s.loading = "eager"; });
+  }
+
   /* ---------- print buttons: hidden in the HTML (they need JS), shown here ---------- */
   if (typeof window.print === "function") $$("button[data-print]").forEach(b => { b.hidden = false; b.addEventListener("click", () => window.print()); });
 

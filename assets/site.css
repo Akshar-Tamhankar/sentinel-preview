@@ -1,7 +1,6 @@
 /* =====================================================================
    site.css: shared by every page. Tokens, base, type, buttons, focus,
    header and navigation, footer, forms, the pilot block, the
-   student-data (tr-) and pricing (pr-) blocks, product UI drawn in HTML,
    placeholders and print.
    Page-only styles live in assets/home.css or assets/pages.css.
 
@@ -127,7 +126,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media (max-width:560px){.bar .wrap>.btn{display:none}}
 
 /* ======================= PILOT: the booking block, on green ======================= */
-.pilot{background:var(--green);color:var(--white);padding-block:clamp(80px,10vw,144px)}
+.pilot{background:var(--green);color:var(--white)}
 .pilot :focus-visible{outline-color:var(--white)}
 .pilot .wrap{display:grid;grid-template-columns:7fr 5fr;gap:clamp(32px,6vw,96px)}
 @media (max-width:900px){.pilot .wrap{grid-template-columns:1fr}}
@@ -164,134 +163,14 @@ footer .foot-nav a{display:inline-block;padding:11px 0;min-width:44px;text-decor
 footer .foot-nav a:hover,footer .foot-nav a[aria-current="page"]{text-decoration:underline;text-underline-offset:6px}
 footer :target{scroll-margin-top:var(--bar)}
 
-/* ============ STUDENT DATA AND PRIVACY (schools.html) ============ */
-.tr{padding-block:clamp(72px,9vw,128px)}
-.tr-head{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:end}
-.tr-block{margin-top:clamp(56px,7vw,96px)}
-.tr-intro{margin-top:12px;max-width:34em}
-.tr p,.tr li,.tr dd{max-width:34em}
-
-/* the data table */
-.tr-table{width:100%;margin-top:24px;border-collapse:collapse;font-size:.98rem;line-height:1.5}
-.tr-table caption{caption-side:top;text-align:left;font-size:.92rem;color:var(--quiet);padding-bottom:12px}
-.tr-table th,.tr-table td{text-align:left;vertical-align:top;padding:16px 18px 16px 0;border-top:1px solid var(--line)}
-.tr-table thead th{font-size:.9rem;font-weight:700;border-top:0;border-bottom:2px solid var(--green);padding-bottom:10px}
-.tr-table tbody th{font:700 1.23rem/1.15 var(--body);width:19%}
-.tr-table td:nth-of-type(1){width:36%}
-.tr-after{margin-top:16px}
-@media (max-width:720px){
-  .tr-table,.tr-table tbody,.tr-table tr,.tr-table th,.tr-table td{display:block;width:auto !important}
-  .tr-table caption{display:block;padding:0 0 8px}
-  .tr-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  .tr-table tbody tr{border-top:2px solid var(--green);padding:8px 0 12px}
-  .tr-table tbody th{border-top:0;padding:10px 0 4px}
-  .tr-table td{border-top:0;padding:6px 0}
-  .tr-table td::before{content:attr(data-label);display:block;font-size:.82rem;font-weight:700;color:var(--quiet)}
-}
-
-/* what the app doesn't do / who can see what */
-.tr-two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,96px)}
-.tr-two .tr-block{margin-top:0}
-.tr-nos{list-style:none;padding:0;margin-top:22px;display:grid;gap:18px}
-.tr-nos li{display:grid;grid-template-columns:12px 1fr;gap:14px}
-.tr-nos li::before{content:"";width:12px;height:2px;background:var(--red);margin-top:.8em}
-.tr-nos b,.tr-dl dt{display:block;font-weight:700}
-.tr-dl{margin-top:22px}
-.tr-dl dd{margin:2px 0 18px}
-.tr-state{display:inline-block;font-size:.8rem;font-weight:700;border-radius:0;padding:1px 8px;background:var(--tint);color:var(--green);margin-left:6px;white-space:nowrap}
-
-/* promises (owner commitments) */
-.tr-promise{background:var(--tint);border-radius:0;padding:clamp(24px,3.4vw,44px)}
-.tr-checks{list-style:none;padding:0;margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:16px clamp(24px,4vw,56px)}
-.tr-checks li{display:grid;grid-template-columns:14px 1fr;gap:14px}
-.tr-checks li::before{content:"";width:14px;height:8px;border:solid var(--green);border-width:0 0 2.5px 2.5px;transform:rotate(-45deg);margin-top:.35em}
-
-/* before a full rollout: on green */
-.tr-road{background:var(--green);color:var(--white);border-radius:0;padding:clamp(24px,3.4vw,44px)}
-.tr-road :focus-visible{outline-color:var(--white)}
-.tr-road .tr-intro,.tr-left p,.tr-road .tr-close{color:var(--mist)}
-.tr-left{list-style:none;padding:0;margin-top:26px;border-top:1px solid var(--line-dark)}
-.tr-left li{display:grid;grid-template-columns:minmax(0,15em) minmax(0,1fr);gap:8px 32px;padding:20px 0;border-bottom:1px solid var(--line-dark);max-width:none}
-.tr-left h4{font:700 1.34rem/1.1 var(--body);color:var(--white)}
-.tr-left p{max-width:40em}
-.tr-left .tr-state{background:transparent;border:1.5px solid var(--mist);color:var(--mist);margin:8px 0 0}
-.tr-left .tr-state.built{background:var(--white);border-color:var(--white);color:var(--green)}
-.tr-road .tr-close{margin-top:22px}
-
-/* accessibility statement */
-.tr-a11y{display:grid;grid-template-columns:5fr 7fr;gap:clamp(32px,6vw,96px)}
-.tr-a11y ul{padding-left:1.1em;margin-top:14px}
-.tr-a11y li{margin-top:.45em}
-.tr-a11y li::marker{color:var(--sage)}
-.tr-a11y h4{font-weight:700;font-size:1.05rem;margin-top:26px}
-.tr-a11y h4:first-child{margin-top:0}
-.tr-a11y a{font-weight:700}
-
-@media (max-width:900px){
-  .tr-head,.tr-two,.tr-a11y{grid-template-columns:1fr}
-  .tr-checks{grid-template-columns:1fr}
-  .tr-left li{grid-template-columns:1fr}
-}
-
 /* values the owner still has to fill in. Visitors see a quiet "not set yet"; add ?review to the address to see each one, dashed. */
 html:not(.tr-review) .owner-todo{display:none}
 html:not(.tr-review) .tr-ph{font-size:0;border:0;padding:0}
 html:not(.tr-review) .tr-ph::after{content:"(not set yet)";font:500 1rem/1.4 var(--body);color:var(--quiet)}
 html:not(.tr-review) .dark .tr-ph::after,html:not(.tr-review) .hero .tr-ph::after{color:var(--bone-2)}
-html:not(.tr-review) .pr-cost .tr-ph::after{content:"Price not set yet"}
 .tr-ph{font:700 .95rem/1.4 var(--body);text-transform:none;border:2px dashed currentColor;border-radius:0;padding:0 6px;overflow-wrap:anywhere}
 /* add ?review to the page URL to outline every promise that still needs the owner's yes */
 .tr-review [data-confirm]{outline:2px dashed var(--green);outline-offset:2px;background:var(--tint)}
-
-/* ============ PRICING ============ */
-.pr{padding-block:clamp(72px,9vw,128px)}
-.pr-head{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:end}
-.pr-plans{list-style:none;padding:0;margin-top:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;align-items:stretch;border-top:2px solid var(--green)}
-.pr-plan{display:flex;flex-direction:column;padding:28px clamp(16px,2vw,28px) 8px 0;border-right:1px solid var(--line)}
-.pr-plan+.pr-plan{padding-left:clamp(16px,2vw,28px)}
-.pr-plan:last-child{border-right:0}
-.pr-plan h3{font:700 2.13rem/1.0 var(--body)}
-.pr-for{font-size:.95rem;color:var(--quiet);margin-top:6px}
-.pr-cost{padding:18px 0}
-.pr-cost .num{display:block;font-size:clamp(1.8rem,3vw,2.5rem);line-height:1}
-.pr-cost small{display:block;font-weight:600;font-size:.85rem;margin-top:6px}
-.pr-plan ul{list-style:none;padding:0 0 18px;display:grid;gap:10px;font-size:.97rem}
-.pr-plan li{display:grid;grid-template-columns:14px 1fr;gap:12px}
-.pr-plan li::before{content:"";width:14px;height:8px;border:solid var(--green);border-width:0 0 2.5px 2.5px;transform:rotate(-45deg);margin-top:.35em}
-.pr-plan .pr-next{margin-top:auto;padding:0 0 18px;font-size:.95rem;color:var(--quiet)}
-.pr-notes{margin-top:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px clamp(24px,4vw,56px)}
-.pr-notes dt{font-weight:700}
-.pr-notes dd{margin-top:4px;max-width:30em}
-.pr-cta{margin-top:40px;display:flex;gap:12px;flex-wrap:wrap}
-@media (max-width:900px){
-  .pr-head,.pr-notes{grid-template-columns:1fr}
-  .pr-plans{grid-template-columns:1fr}
-  .pr-plan,.pr-plan+.pr-plan{padding:24px 0 8px;border-right:0;border-bottom:1px solid var(--line)}
-}
-.tr :focus-visible,.pr :focus-visible{outline-color:var(--green)}
-.tr .tr-road :focus-visible{outline-color:var(--white)}
-
-/* ============ product UI, drawn in HTML and CSS ============ */
-.screen{color:var(--green);background:#fff;border:1px solid var(--line);border-radius:0;padding:18px;font-size:.92rem;box-shadow:0 1px 0 var(--line),0 30px 60px -40px rgba(6,20,27,.35)}
-.screen-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-weight:700;gap:10px}
-.screen-top span{font-weight:500;color:var(--quiet)}
-.tile{border:1px solid var(--line);border-radius:0;padding:14px}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.member{background:var(--green);color:var(--white);border-color:var(--green)}
-.member .num{font-size:2.6rem;line-height:.95;color:var(--pink)}
-.member svg{border-radius:0;height:76px;width:76px;margin-top:10px}
-.meter{height:8px;border-radius:99px;background:var(--tint);margin-top:8px;overflow:hidden}
-.meter i{display:block;height:100%;width:50%;background:var(--pink)}
-.rows{list-style:none;padding:0;margin:10px 0 0}
-.screen .rows li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);margin:0}
-.screen .rows li:last-child{border-bottom:0}
-.pill{align-self:center;color:var(--ok-ink)!important;font-size:.8rem;font-weight:700;border-radius:3px;padding:2px 9px;background:var(--ok-bg);color:var(--ok-ink);white-space:nowrap}
-.pill.r{background:var(--red-bg);color:var(--red-ink)!important}
-.pill.p{background:var(--pink);color:var(--green)!important}
-.cam{height:118px;border-radius:0;background:var(--green);position:relative;display:grid;place-items:center;color:var(--mist);font-size:.85rem}
-.cam::after{content:"";position:absolute;inset:14px;border:2px solid var(--bone-2);border-radius:0;opacity:.6}
-.wide-btn{display:block;width:100%;margin-top:10px;background:var(--green);color:var(--white);border:0;border-radius:0;padding:.85em;font-weight:700;text-align:center}
-.kpi .num{font-size:2.3rem;line-height:1}
 
 /* shared motion (reel rules): enter from .97 and transparent; refusals shake */
 @keyframes sn-in{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
@@ -308,23 +187,16 @@ html:not(.tr-review) .pr-cost .tr-ph::after{content:"Price not set yet"}
   *{box-shadow:none!important;text-shadow:none!important;animation:none!important;transition:none!important}
   a{color:#000}
   main a[href^="mailto"]::after,main a[href^="http"]::after{content:" (" attr(href) ")";font-weight:400;overflow-wrap:anywhere}
-  .dark,.on-green,.tr-road,footer,.tr-promise{background:#fff!important;color:#000!important}
-  .tr-road,.tr-promise{border:1.5px solid #000}
-  .tr-road *,footer *,.on-green *{color:#000!important}
-  .tr-left,.tr-left li{border-color:#000!important}
-  .tr-left .tr-state,.tr-left .tr-state.built{background:#fff!important;border-color:#000!important}
-  .tr-table thead th{border-bottom:1.5px solid #000}
+  .dark,.on-green,footer{background:#fff!important;color:#000!important}
   h1,h2,h3,h4{break-after:avoid;page-break-after:avoid}
-  li,tr,dd,dt,figure,.tr-promise,.faq details{break-inside:avoid;page-break-inside:avoid}
-  .tr,.pr{padding-block:16px;border:0}
-  .tr-block{margin-top:22px}
+  li,tr,dd,dt,figure{break-inside:avoid;page-break-inside:avoid}
   footer{padding-block:10px;border-top:1px solid #000}
 }
 
 @media (max-width:420px){main .btn{white-space:normal;text-align:center;max-width:100%}}
 
 /* a closing line at the foot of the long pages */
-.end-cta{background:var(--wine);color:#fff;padding-block:clamp(64px,8vw,120px)}
+.end-cta{background:var(--wine);color:#fff;padding-block:clamp(48px,5vw,80px)}
 .end-cta .wrap{display:flex;justify-content:space-between;align-items:flex-end;gap:24px 40px;flex-wrap:wrap}
 .end-cta :focus-visible{outline-color:var(--ice)}
 .end-cta .btn{background:var(--ice);border-color:var(--ice);color:var(--ink)}
