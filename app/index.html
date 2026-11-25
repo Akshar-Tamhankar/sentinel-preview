@@ -7,7 +7,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#2a0710" />
+    <meta name="theme-color" content="#06141b" />
     <meta
       name="description"
       content="Sentinel: students earn points for attending games and spend them on prizes."
@@ -41,12 +41,11 @@
     <div class="workspace">
       <div id="demo-banner" class="demo-banner" role="region" aria-label="Demo mode" hidden>
         <p>
-          <strong>Demo mode:</strong> sample data, nothing is saved to a server.
+          <strong>Demo mode:</strong> <span class="wide">sample data, nothing is saved to a server.</span>
           <span id="demo-storage-note" hidden></span>
         </p>
-        <button type="button" class="btn small" id="demo-reset">Reset demo</button>
-        <a class="demo-guide" href="/sentinel-preview/demo.html">Demo guide</a>
-        <a class="btn small demo-exit" href="/sentinel-preview/">Exit demo</a>
+        <button type="button" class="btn small" id="demo-reset" aria-label="Reset demo">Reset<span class="wide">&nbsp;demo</span></button>
+        <a class="btn small demo-exit" href="/sentinel-preview/demo.html" aria-label="Exit demo">Exit<span class="wide">&nbsp;demo</span></a>
       </div>
       <div id="net-banner" class="net-banner" role="alert" hidden>
         You are offline. Check-ins and reward changes are paused until the
@@ -60,8 +59,8 @@
         <div class="top-controls">
           <div id="roles" class="role-switch" aria-label="Demo view" hidden>
             <button data-role="student">Student</button
-            ><button data-role="staff">Gate worker</button
-            ><button data-role="admin">Admin</button>
+            ><button data-role="staff">Gate<span class="wide">&nbsp;worker</span></button
+            ><button data-role="admin">Office</button>
           </div>
           <span class="avatar" id="avatar">AC</span>
         </div>

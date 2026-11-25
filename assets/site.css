@@ -196,7 +196,7 @@ html:not(.tr-review) .dark .tr-ph::after,html:not(.tr-review) .hero .tr-ph::afte
 @media (max-width:420px){main .btn{white-space:normal;text-align:center;max-width:100%}}
 
 /* a closing line at the foot of the long pages */
-.end-cta{background:var(--wine);color:#fff;padding-block:clamp(48px,5vw,80px)}
+.end-cta{background:var(--wine);color:#fff;padding-block:clamp(36px,3.4vw,56px) 0}
 .end-cta .wrap{display:flex;justify-content:space-between;align-items:flex-end;gap:24px 40px;flex-wrap:wrap}
 .end-cta :focus-visible{outline-color:var(--ice)}
 .end-cta .btn{background:var(--ice);border-color:var(--ice);color:var(--ink)}

@@ -277,20 +277,20 @@ vec3 shade(vec2 f){
         vec2 cq=abs(l.xy)-vec2(PB.x-.032,PB.y-.032)+.088;float inr=length(max(cq,0.))+min(max(cq.x,cq.y),0.)-.088;
         float scr=smoothstep(.0035,-.0035,inr);
         float lod=max(0.,log2(780.*t/(1.75*uRes.y)/(2.*PB.x))-.35);vec3 A=textureLod(uScr,s,lod).rgb,B=textureLod(uOk,s,lod).rgb;
-        vec3 sc=mix(A,B,smoothstep(-.012,.012,uOkK*1.1-.04-(1.-s.y)));
+        float okw=smoothstep(-.012,.012,uOkK*1.1-.04-(1.-s.y));vec3 sc=mix(A,B,okw);
         // what the phone's camera sees: the card coming into the app's own brackets, the read, then the lock
-        vec2 vf=(s-vec2(.10,.587))/vec2(.80,.316);vec2 vq=abs(vf-.5)*vec2(312.,258.)-vec2(150.,123.);float vin=1.-smoothstep(5.,7.,length(max(vq,0.)));
+        vec2 vf=(s-vec2(.0410,.4006))/vec2(.9179,.4366);vec2 vq=abs(vf-.5)-.5;float vin=step(max(vq.x,vq.y),0.)*step(.134,vf.y)*(1.-okw);
         if(uCam.x>0.&&vin>0.){
-          vec2 ctr=vec2(.5+uCam.y,.615+uCam.z*.02);float ca=cos(uCam.z),sa=sin(uCam.z);vec2 cq=(vf-ctr)*vec2(312.,258.);cq=mat2(ca,-sa,sa,ca)*cq;
-          vec2 cu=cq/vec2(262.,164.8)+vec2(.74,.5);
+          vec2 ctr=vec2(.5+uCam.y,.565+uCam.z*.02);float ca=cos(uCam.z),sa=sin(uCam.z);vec2 cq=(vf-ctr)*358.;cq=mat2(ca,-sa,sa,ca)*cq;
+          vec2 cu=cq/vec2(400.,251.6)+vec2(.74,.5);
           vec3 feed=textureLod(uBg,vec2(.35,.45)+vf*vec2(.25,.22)-uCam.y*.05,2.).rgb*.75+.02;
           vec2 ce=abs(cu-.5);float cin=smoothstep(.503,.497,max(ce.x,ce.y));
-          float clod=max(0.,log2(1240.*t/(1.75*uRes.y)/(2.*PB.x*.80*262./312.))-.35);
+          float clod=max(0.,log2(1240.*t/(1.75*uRes.y)/(2.*PB.x*.918*400./358.))-.35);
           vec3 cc=textureLod(uCa,cu,clod).rgb*(.80+.12*(1.-vf.y));
           if(uBeam>=0.){float bb=cu.y-(1.04-uBeam*1.08);cc+=uBeamC*(smoothstep(.02,0.,abs(bb))*1.3+.40*smoothstep(.22,0.,bb)*step(0.,bb));}
           feed=mix(feed,cc,cin);
           float br=smoothstep(.10,.30,A.r-A.b);                          // the brackets, kept from the real screen
-          vec2 lk=abs((vf-vec2(.5,.615))*vec2(312.,258.))-vec2(62.,62.);float lm=max(lk.x,lk.y);
+          vec2 lk=abs((vf-vec2(.5,.565))*358.)-vec2(95.,95.);float lm=max(lk.x,lk.y);
           feed=mix(feed,mix(vec3(1.,.4157,.2392),uBeamC,step(.5,uCam.w)),br);
           feed=mix(feed,uBeamC,smoothstep(1.2,.2,abs(lm)-1.6)*smoothstep(0.,.25,uCam.w));
           sc=mix(sc,feed,uCam.x*vin);

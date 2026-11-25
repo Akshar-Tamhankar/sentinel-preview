@@ -13,7 +13,7 @@ const REQUEST_TIMEOUT_MS = 15000;
 const TOAST_MS = 4500;
 const SEARCH_DEBOUNCE_MS = 180;
 const SCAN_FPS = 10; // enough for a gate line; keeps mid-range phones cool
-const SCAN_BOX_RATIO = 0.7; // decode only the center of the frame
+const SCAN_BOX_RATIO = 0.85; // a big target: close is good enough
 const SCAN_HINT_MS = 8000;
 const GATE_LIST_LIMIT = 30;
 const GATE_RECENT_LIMIT = 8;
@@ -125,6 +125,9 @@ const paths = {
   plus: '<path d="M12 5v14M5 12h14"/>',
   bag: '<path d="M5 7h14l2 14H3zM8 8V6a4 4 0 0 1 8 0v2"/>',
   qr: '<path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v1M14 20h1M18 18h3v3h-3"/>',
+  more: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  expand: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
   image:
     '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>',
 };
@@ -158,26 +161,31 @@ const num = (n) => Number(n || 0).toLocaleString("en-US");
 const state = { user: null, demo: false, render: 0, cleanup: null };
 const NAV = {
   student: [
-    ["home", "Dashboard", "home"],
-    ["schedule", "Upcoming games", "calendar"],
-    ["shop", "Reward shop", "gift"],
-    ["history", "My activity", "history"],
+    ["home", "Home", "qr"],
+    ["schedule", "Games", "calendar"],
+    ["shop", "Prizes", "gift"],
+    ["history", "Activity", "history"],
     ["account", "My profile", "user"],
   ],
   staff: [
-    ["gate", "Gate check-in", "scan"],
+    ["gate", "Scan", "scan"],
     ["account", "My account", "user"],
   ],
+  // On phones the first four are tabs and the rest sit behind More.
   admin: [
-    ["overview", "Overview", "chart"],
-    ["gate", "Gate check-in", "scan"],
-    ["events", "Events", "calendar"],
+    ["overview", "Overview", "home"],
+    ["gate", "Scan", "scan"],
     ["members", "Members", "users"],
-    ["rewards", "Rewards", "gift"],
-    ["orders", "Prize pickups", "bag"],
+    ["orders", "Pickups", "bag"],
+    ["events", "Games", "calendar"],
+    ["rewards", "Prizes", "gift"],
     ["account", "My account", "user"],
   ],
 };
+const PHONE_TABS = 4;
+const HOME_POLL_MS = 8000; // the student's screen notices its own check-in
+const NEXT_SCAN_MS = 1600; // how long a successful check-in stays up
+const SAME_CODE_MS = 4000; // ignore a card still in front of the camera
 const VIEWS = {};
 let toastTimer;
 function toast(message, error = false) {
@@ -268,7 +276,31 @@ const empty = (text, ico = "calendar") =>
 const pill = (label, style = "") =>
   `<span class="pill ${style}">${esc(label)}</span>`;
 function heading(title, sub, action = "") {
-  return `<div class="page-heading"><div><h1>${title}</h1><p>${sub}</p></div>${action}</div>`;
+  return `<div class="page-heading"><div><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ""}</div>${action}</div>`;
+}
+/** The demo's next step, so one story runs through all three views. */
+function demoNext(role, text, label) {
+  return state.demo
+    ? `<aside class="demo-next"><p><b>Next in the demo</b>${text}</p><button type="button" class="btn small" data-go="${role}">${label}${icon("arrow")}</button></aside>`
+    : "";
+}
+function bindDemoNext() {
+  $$("[data-go]").forEach((b) => (b.onclick = () => switchRole(b.dataset.go)));
+}
+function buzz(pattern) {
+  try {
+    if (navigator.userActivation?.hasBeenActive !== false)
+      navigator.vibrate?.(pattern);
+  } catch {
+    /* not on this device */
+  }
+}
+function resetDialog() {
+  const dialog = $("#dialog");
+  dialog.className = "";
+  dialog.onclose = null;
+  delete dialog.dataset.profileUser;
+  return dialog;
 }
 /** Inline SVG QR code for a membership code, or a readable fallback. */
 function membershipQr(code) {
@@ -288,12 +320,34 @@ function membershipStatus(m) {
 }
 function membershipCard(u) {
   const m = u.membership || {};
-  return `<section class="card membership-card"><div class="membership-top"><div class="membership-brand"><span>Membership card</span>${icon("qr")}</div><div class="membership-name">${esc(u.name)}</div><div class="membership-id">Student ID · ${esc(u.studentNumber)}</div></div><div class="membership-bottom">${membershipQr(m.tag)}<div class="member-code" aria-label="Membership code">${esc(groupCode(m.tag))}</div><div class="membership-meta">${membershipStatus(m)}<span>Through ${m.expires ? fmtDate(m.expires, { year: "numeric" }) : "not set"}</span></div><div class="membership-actions">${btn("View or print QR code", "print-my-tag", "small wide", "download")}</div></div></section>`;
+  return `<section class="card pass"><div class="pass-top"><div><strong class="pass-name">${esc(u.name)}</strong><span>ID ${esc(u.studentNumber)}</span></div>${membershipStatus(m)}</div>${membershipQr(m.tag)}<div class="member-code" aria-label="Membership code">${esc(groupCode(m.tag))}</div><p class="pass-hint">${m.valid ? `Good through ${m.expires ? fmtDate(m.expires, { year: "numeric" }) : "this season"}.` : "Ask the athletics office to activate it."}</p><div class="pass-actions">${btn("Full screen", "show-qr", "", "expand")}${btn("Print or save", "print-my-tag", "", "download")}</div></section>`;
+}
+/** The QR code as big as the screen allows, with the screen kept awake. */
+function showQr(u) {
+  const dialog = resetDialog();
+  dialog.className = "qr-full";
+  dialog.setAttribute("aria-label", "Your QR code, full screen");
+  dialog.removeAttribute("aria-labelledby");
+  $("#dialog-content").innerHTML =
+    `<button type="button" class="qr-close" id="close-qr" aria-label="Close">${icon("close")}</button><div class="qr-stage">${membershipQr(u.membership?.tag)}<strong>${esc(u.name)}</strong><div class="member-code">${esc(groupCode(u.membership?.tag))}</div></div>`;
+  let lock = null;
+  navigator.wakeLock
+    ?.request("screen")
+    .then((l) => {
+      if (dialog.open) lock = l;
+      else l.release();
+    })
+    .catch(() => {});
+  dialog.onclose = () => {
+    lock?.release().catch(() => {});
+    dialog.onclose = null;
+  };
+  dialog.showModal();
+  $("#close-qr").onclick = () => dialog.close();
+  $(".qr-stage", dialog).onclick = () => dialog.close();
 }
 function showDialog(title, sub, body, onSave, saveLabel = "Save changes") {
-  const dialog = $("#dialog");
-  dialog.classList.remove("student-profile-dialog");
-  delete dialog.dataset.profileUser;
+  const dialog = resetDialog();
   $("#dialog-content").innerHTML =
     `<div class="dialog-head"><h2 id="dialog-title">${title}</h2><button type="button" data-close aria-label="Close dialog">×</button></div>${sub ? `<p class="dialog-sub">${sub}</p>` : ""}<form id="dialog-form">${body}<div id="form-error" role="alert" hidden></div><div class="dialog-actions">${btn("Cancel", "", "", "")}<button class="btn primary" type="submit">${saveLabel}</button></div></form>`;
   dialog.setAttribute("aria-labelledby", "dialog-title");
@@ -321,9 +375,7 @@ function showDialog(title, sub, body, onSave, saveLabel = "Save changes") {
   dialog.showModal();
 }
 function printTag(u) {
-  const dialog = $("#dialog");
-  dialog.classList.remove("student-profile-dialog");
-  delete dialog.dataset.profileUser;
+  const dialog = resetDialog();
   dialog.setAttribute("aria-label", "Printable membership QR code");
   dialog.removeAttribute("aria-labelledby");
   const own = state.user?.id === u.id;
@@ -366,90 +418,150 @@ function activityList(ledger) {
         .join("")
     : empty("No check-ins yet.", "star");
 }
-function eventList(events) {
+function eventList(events, status = () => "") {
   return events.length
     ? events
         .map(
           (e) =>
-            `<div class="event-item"><div class="event-date"><span>${fmtDate(e.date, { day: undefined })}</span><strong>${new Date(`${e.date}T12:00:00`).getDate()}</strong></div><div class="event-content">${e.open ? pill("Gate open", "live") : ""}<strong>${esc(e.name)}</strong><p>${esc(e.sport)} · ${fmtStart(e)} · ${esc(e.location)}</p></div><div class="event-points">+${num(e.points)} <span>pts</span></div></div>`,
+            `<div class="event-item"><div class="event-date"><span>${fmtDate(e.date, { day: undefined })}</span><strong>${new Date(`${e.date}T12:00:00`).getDate()}</strong></div><div class="event-content"><strong>${esc(e.name)}</strong><p>${fmtStart(e)} · ${esc(e.location)}</p>${status(e) || (e.open ? pill("Gate open", "live") : "")}</div><div class="event-points">+${num(e.points)}</div></div>`,
         )
         .join("")
-    : empty("More games are on the way. Check back soon.");
+    : empty("No games scheduled yet.");
+}
+const rewardIcon = (r) =>
+  icon(/shirt/i.test(r.name) ? "shirt" : /voucher|ticket/i.test(r.name) ? "ticket" : "gift");
+function pickupNotice(orders) {
+  const waiting = orders.filter((o) => o.status === "pending");
+  return waiting.length
+    ? `<section class="card waiting">${icon("bag")}<div><strong>${waiting.length === 1 ? `${esc(waiting[0].rewardName)} is ready` : `${waiting.length} prizes are ready`}</strong><p>Show your school ID at the athletics office.</p></div></section>`
+    : "";
 }
 
 VIEWS.home = async () => {
-  const [{ events }, activity, { rewards }] = await Promise.all([
+  const [{ events }, activity, { rewards }, { attendance }] = await Promise.all([
     api("GET", "/api/events"),
     api("GET", "/api/me/activity"),
     api("GET", "/api/rewards"),
+    api("GET", "/api/me/attendance"),
   ]);
   const u = state.user,
-    next =
-      rewards
-        .filter((r) => r.stock !== 0)
-        .sort((a, b) => a.cost - b.cost)
-        .find((r) => r.cost > u.points) || rewards.find((r) => r.stock !== 0);
-  const games = events.filter((e) => e.open || e.date >= today()).slice(0, 3);
-  const pending = activity.orders.filter((o) => o.status === "pending").length;
+    inStock = rewards
+      .filter((r) => r.stock !== 0)
+      .sort((a, b) => a.cost - b.cost),
+    next = inStock.find((r) => r.cost > u.points),
+    can = inStock.filter((r) => r.cost <= u.points).length,
+    open = events.filter((e) => e.open),
+    here = (e) => attendance.find((a) => a.eventId === e.id),
+    now = open.find((e) => !here(e)) || open[0],
+    games = events.filter((e) => e.open || e.date >= today()).slice(0, 3);
+  const strip = now
+    ? here(now)
+      ? `<div class="strip in">${icon("check")}<span><b>You’re checked in</b>${esc(now.name)}</span><strong>+${num(here(now).points)}</strong></div>`
+      : `<div class="strip"><i class="dot" aria-hidden="true"></i><span><b>Gate open</b>${esc(now.name)}</span><strong>+${num(now.points)}</strong></div>`
+    : "";
+  const m = u.membership || {};
   return {
-    html:
-      heading(
-        `Hi, ${esc(u.name.split(" ")[0])}.`,
-        "Your points, your QR code and the next games.",
-        `<div class="date-chip">${icon("calendar")}${new Date().toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "short", month: "short", day: "numeric" })}</div>`,
-      ) +
-      `
-    <div class="grid dashboard-grid"><div class="stack"><section class="card points-hero"><div class="field-art" aria-hidden="true"></div><div class="hero-main"><p class="eyebrow">Your points</p><div class="balance">${num(u.points)}<span>points</span></div><p class="hero-caption">Points for each game you check in at.</p></div><div class="hero-foot">${icon("star")}Spend them in the reward shop.</div></section>
-    <div class="mini-stats"><div class="mini-stat">${icon("ticket")}<strong>${num(activity.attended)}</strong><span>Games attended</span></div><div class="mini-stat">${icon("gift")}<strong>${num(activity.orders.filter((o) => o.status !== "cancelled").length)}</strong><span>Rewards reserved</span></div><div class="mini-stat">${icon("bag")}<strong>${num(pending)}</strong><span>Ready for pickup</span></div></div>
-    <section class="card"><div class="card-top"><h2>Next games</h2>${link("All games", "schedule")}</div>${eventList(games)}</section>
-    <section class="card"><div class="card-top"><h2>Latest activity</h2>${link("View activity", "history")}</div>${activityList(activity.ledger.slice(0, 3))}</section></div>
-    <div class="stack">${membershipCard(u)}<section class="card"><div class="card-top"><h2>Your next reward</h2>${icon("gift")}</div>${next ? `<div class="reward-preview"><div class="reward-icon">${icon(/shirt/i.test(next.name) ? "shirt" : "ticket")}</div><div><h3>${esc(next.name)}</h3><p>${num(next.cost)} points to redeem</p></div></div><div class="progress-top"><span>${num(Math.min(u.points, next.cost))} / ${num(next.cost)} pts</span><strong>${u.points >= next.cost ? "Unlocked!" : `${num(next.cost - u.points)} to go`}</strong></div><div class="progress" role="progressbar" aria-label="Points toward next reward" aria-valuenow="${Math.min(u.points, next.cost)}" aria-valuemin="0" aria-valuemax="${next.cost}"><span style="width:${Math.min(100, (u.points / next.cost) * 100)}%"></span></div><div class="section-gap">${link("See the reward shop", "shop")}</div>` : empty("New rewards are coming soon.", "gift")}</section>
-    <section class="card"><h2>How points work</h2><ol class="steps section-gap"><li><div><strong>Get your game ticket</strong>Buy admission separately on GoFan.</div></li><li><div><strong>Bring your membership QR code</strong>A worker checks admission, then scans your QR code from paper or your phone.</div></li><li><div><strong>Get your points</strong>They land in your account right away.</div></li></ol></section></div></div>`,
+    html: `<div class="home-grid"><section class="card pass main-pass">${strip}<div class="pass-top"><div><h1>${esc(u.name)}</h1><span>ID ${esc(u.studentNumber)}</span></div>${membershipStatus(m)}</div>${membershipQr(m.tag)}<div class="member-code" aria-label="Membership code">${esc(groupCode(m.tag))}</div><p class="pass-hint">${m.valid ? "Show this at the gate after your ticket is checked." : "Ask the athletics office to activate your membership."}</p><div class="pass-actions">${btn("Full screen", "show-qr", "primary", "expand")}${btn("Print or save", "print-my-tag", "", "download")}</div></section><div class="stack">${pickupNotice(activity.orders)}<section class="card points"><div class="points-row"><div><span class="label">Your points</span><div class="balance">${num(u.points)}</div></div><a class="btn hot" href="#/shop">${can ? `Pick a prize` : "See prizes"}${icon("arrow")}</a></div>${next ? `<div class="progress-top"><span>${esc(next.name)}</span><strong>${num(next.cost - u.points)} to go</strong></div><div class="progress" role="progressbar" aria-label="Points toward ${esc(next.name)}" aria-valuenow="${u.points}" aria-valuemin="0" aria-valuemax="${next.cost}"><span data-w="${Math.min(100, (u.points / next.cost) * 100)}"></span></div>` : ""}</section><section class="card"><div class="card-top"><h2>Next games</h2>${link("All games", "schedule")}</div>${eventList(games, (e) => (here(e) ? pill("Checked in", "active") : ""))}</section>${demoNext("staff", "This is Ava’s phone. Check Ava in at the gate.", "Gate view")}</div></div>`,
     mount() {
       $("#print-my-tag").onclick = () => printTag(u);
+      $("#show-qr").onclick = () => showQr(u);
+      $(".main-pass .qr-wrap")?.addEventListener("click", () => showQr(u));
+      setBars();
+      bindDemoNext();
+      if (!now || here(now)) return;
+      // Scanned at the gate: say so here, without a refresh.
+      let busy = false;
+      const timer = setInterval(async () => {
+        if (busy || document.hidden) return;
+        busy = true;
+        try {
+          const { attendance: latest } = await api("GET", "/api/me/attendance");
+          const hit = latest.find((a) => a.eventId === now.id);
+          if (hit) {
+            clearInterval(timer);
+            buzz([40, 60, 120]);
+            toast(`You’re checked in. +${hit.points} points.`);
+            route();
+          }
+        } catch {
+          /* try again on the next tick */
+        } finally {
+          busy = false;
+        }
+      }, HOME_POLL_MS);
+      state.cleanup = () => clearInterval(timer);
     },
   };
 };
+/** Progress bar widths. */
+function setBars(root = $("#view")) {
+  $$("[data-w]", root).forEach((el) => {
+    el.style.width = `${el.dataset.w}%`;
+  });
+}
 
 VIEWS.schedule = async () => {
-  const { events } = await api("GET", "/api/events");
-  const { attendance } = await api("GET", "/api/me/attendance");
+  const [{ events }, { attendance }] = await Promise.all([
+    api("GET", "/api/events"),
+    api("GET", "/api/me/attendance"),
+  ]);
+  const been = (e) => attendance.some((a) => a.eventId === e.id);
+  const block = (title, list) =>
+    list.length
+      ? `<section class="card event-card"><h2>${title}</h2>${eventList(list, (e) => (been(e) ? pill("Checked in", "active") : e.open ? pill("Gate open", "live") : ""))}</section>`
+      : "";
+  const coming = events.filter((e) => e.open || e.date >= today()),
+    past = events.filter((e) => !e.open && e.date < today());
   return {
     html:
-      heading(
-        "Upcoming games",
-        "Games and how many points each one is worth.",
-      ) +
-      `<div class="notice">${icon("info")}Purchase admission separately through your school’s GoFan page. Your rewards membership does not include a game ticket.</div><div class="events-grid section-gap">${events.length ? events.map((e) => `<article class="card event-card"><div class="event-cover"><span class="sport">${esc(e.sport)}</span>${icon("ball")}</div><h3>${esc(e.name)}</h3><p>${fmtDate(e.date, { weekday: "short", year: "numeric" })} · ${fmtStart(e)}</p><p>${esc(e.location)}</p><div class="event-card-foot"><span class="event-points">+${num(e.points)} <span>points</span></span>${attendance.some((a) => a.eventId === e.id) ? pill("Checked in", "active") : e.open ? pill("Gate open", "live") : pill(e.date < today() ? "Past event" : "Upcoming", "blue")}</div></article>`).join("") : `<div class="card empty-state">${empty("No games scheduled yet.")}</div>`}</div>`,
+      heading("Upcoming games", "Buy your ticket on GoFan, then show your QR code at the gate.") +
+      `<div class="stack narrow">${block("Coming up", coming) || `<section class="card">${empty("No games scheduled yet.")}</section>`}${block("Past games", past)}</div>`,
   };
 };
 
 VIEWS.shop = async () => {
-  const { rewards } = await api("GET", "/api/rewards");
-  const u = state.user;
+  const [{ rewards }, { orders }] = await Promise.all([
+    api("GET", "/api/rewards"),
+    api("GET", "/api/me/activity"),
+  ]);
+  const u = state.user,
+    ready = (r) => r.stock !== 0 && u.points >= r.cost && u.membership?.valid,
+    list = [...rewards].sort(
+      (a, b) => ready(b) - ready(a) || a.cost - b.cost,
+    );
+  const action = (r) =>
+    r.stock === 0
+      ? `<span class="reward-no">Sold out</span>`
+      : ready(r)
+        ? `<button class="btn hot" data-order="${esc(r.id)}">Reserve</button>`
+        : !u.membership?.valid
+          ? `<span class="reward-no">Membership isn’t active</span>`
+          : `<span class="reward-no">${num(r.cost - u.points)} to go</span>`;
   return {
     html:
       heading(
         "Reward shop",
-        "Reserve a prize with your points, then pick it up at the athletics office.",
-        `<div class="shop-balance">${icon("star")}<strong>${num(u.points)}</strong> pts available</div>`,
+        "Reserve a prize here. Pick it up at the athletics office.",
+        `<div class="shop-balance"><strong>${num(u.points)}</strong> points</div>`,
       ) +
-      `<div class="rewards-grid">${rewards.length ? rewards.map((r, i) => `<article class="card reward-card"><div class="reward-art art-${i % 3}">${icon(/shirt/i.test(r.name) ? "shirt" : /voucher/i.test(r.name) ? "ticket" : "gift")}</div><div class="reward-info"><div>${pill(r.stock === 0 ? "Sold out" : r.stock === null ? "Available" : `${r.stock} available`, r.stock === 0 ? "inactive" : "blue")}</div><h2>${esc(r.name)}</h2><p>${esc(r.description)}</p><div class="reward-price">${num(r.cost)} <span>points</span></div><button class="btn ${u.points >= r.cost && r.stock !== 0 ? "primary" : ""}" data-order="${esc(r.id)}" ${r.stock === 0 || u.points < r.cost || !u.membership?.valid ? "disabled" : ""}>${r.stock === 0 ? "Sold out" : !u.membership?.valid ? "Active membership required" : u.points < r.cost ? `${num(r.cost - u.points)} more points to go` : "Reserve reward"}</button></div></article>`).join("") : `<div class="card empty-state">${empty("The reward shop is being restocked.", "gift")}</div>`}</div><div class="notice section-gap">${icon("bag")}Reserving a reward deducts your points and holds the item. Bring your school ID to the athletics office for pickup. Check My activity for your order status.</div>`,
+      pickupNotice(orders) +
+      `<div class="rewards-list">${list.length ? list.map((r) => `<article class="card reward-card ${ready(r) ? "can" : ""}"><div class="reward-icon">${rewardIcon(r)}</div><div class="reward-info"><h2>${esc(r.name)}</h2><p>${esc(r.description)}${r.stock > 0 && r.stock <= 5 ? ` ${r.stock} left.` : ""}</p>${!ready(r) && r.stock !== 0 ? `<div class="progress"><span data-w="${Math.min(100, (u.points / r.cost) * 100)}"></span></div>` : ""}</div><div class="reward-buy"><div class="reward-price">${num(r.cost)}<span>points</span></div>${action(r)}</div></article>`).join("") : `<section class="card">${empty("The reward shop is being restocked.", "gift")}</section>`}</div>`,
     mount() {
+      setBars();
       $$("[data-order]").forEach(
         (b) =>
           (b.onclick = () => {
             const r = rewards.find((r) => r.id === b.dataset.order);
             showDialog(
-              "Reserve this prize?",
-              `Reserve ${esc(r.name)} for ${num(r.cost)} points.`,
-              `<div class="notice">${icon("gift")}Your balance after this reservation: ${num(u.points - r.cost)} points.</div>`,
+              `Reserve ${esc(r.name)}?`,
+              "",
+              `<div class="sum"><span>You have<b>${num(u.points)}</b></span><span>It costs<b>${num(r.cost)}</b></span><span>You keep<b>${num(u.points - r.cost)}</b></span></div>`,
               async () => {
                 await api("POST", `/api/rewards/${r.id}/order`, {});
-                toast("Reward reserved. Pick it up at the athletics office.");
+                toast("Reserved. Show your school ID at the athletics office.");
                 route();
               },
-              "Reserve reward",
+              "Reserve it",
             );
           }),
       );
@@ -461,11 +573,8 @@ VIEWS.history = async () => {
   const activity = await api("GET", "/api/me/activity");
   return {
     html:
-      heading(
-        "My activity",
-        "Every game you checked in at and every point you earned or spent.",
-      ) +
-      `<div class="grid two-column"><section class="card"><div class="card-top"><h2>Points activity</h2>${pill(`${activity.attended} games attended`, "blue")}</div>${activityList(activity.ledger)}</section><section class="card"><h2>Your rewards</h2><p class="card-subtitle">Pending reservations are ready for athletics office pickup.</p>${activity.orders.length ? activity.orders.map((o) => `<div class="activity-item"><div class="activity-badge">${icon("gift")}</div><div class="activity-info"><strong>${esc(o.rewardName)}</strong><span>${fmtTime(o.createdAt)} · ${num(o.cost)} pts</span></div>${pill({ pending: "Ready for pickup", fulfilled: "Collected", cancelled: "Canceled" }[o.status], o.status)}</div>`).join("") : empty("Your first reward is waiting in the shop.", "gift")}</section></div>`,
+      heading("My activity", `${num(activity.attended)} game${activity.attended === 1 ? "" : "s"} so far.`) +
+      `<div class="grid two-column"><section class="card"><h2>Points</h2>${activityList(activity.ledger)}</section><section class="card"><h2>Prizes</h2>${activity.orders.length ? activity.orders.map((o) => `<div class="activity-item"><div class="activity-badge">${icon("gift")}</div><div class="activity-info"><strong>${esc(o.rewardName)}</strong><span>${fmtTime(o.createdAt)} · ${num(o.cost)} pts</span></div>${pill({ pending: "Ready for pickup", fulfilled: "Collected", cancelled: "Canceled" }[o.status], o.status)}</div>`).join("") : empty("No prizes yet.", "gift")}</section></div>`,
   };
 };
 
@@ -477,13 +586,13 @@ VIEWS.account = async () => {
     ? `<section class="card"><div class="card-top"><h2>Your points & activity</h2>${link("Full history", "history")}</div><div class="profile-stats account-stats"><div><span>Current balance</span><strong>${num(profile.summary.balance)}<small> pts</small></strong></div><div><span>Games attended</span><strong>${num(profile.summary.gamesAttended)}</strong></div><div><span>Reward spending</span><strong>${num(profile.summary.pointsSpent)}<small> pts</small></strong></div><div><span>Awaiting pickup</span><strong>${num(profile.summary.pendingPickups)}</strong></div></div>${activityList(profile.ledger.slice(0, 5))}</section>`
     : "";
   const securityCard = profile
-    ? `<section class="card"><div class="card-top"><h2>Protect your membership QR code</h2>${icon("qr")}</div><p class="card-subtitle">Lost a printed copy or shared your QR code? Replace it here. The old QR code stops working right away.</p>${u.membership?.tagUpdatedAt ? `<p class="small muted">Last replaced ${fmtTime(u.membership.tagUpdatedAt)}</p>` : ""}<button type="button" class="btn primary wide section-gap" id="reset-my-barcode">${icon("qr")}Replace my QR code</button><p class="security-note">Your points, purchases, and game history stay on your account. Your school-issued student ID stays the same.</p><p class="small muted">To correct your school ID, contact the program admin.</p></section>`
-    : `<section class="card"><h2>Game night, made simple.</h2><ol class="steps section-gap"><li><div><strong>Confirm admission</strong>Follow your school’s GoFan ticket procedure.</div></li><li><div><strong>Scan the membership QR code</strong>Check the student’s name before awarding points.</div></li><li><div><strong>Keep the line moving</strong>Type the code or use name lookup if a QR code won’t scan.</div></li></ol></section>`;
+    ? `<section class="card"><div class="card-top"><h2>Lost or shared your QR code?</h2></div><p class="card-subtitle">Replace it. The old one stops working right away and your points stay.</p>${u.membership?.tagUpdatedAt ? `<p class="small muted">Last replaced ${fmtTime(u.membership.tagUpdatedAt)}</p>` : ""}<button type="button" class="btn wide" id="reset-my-barcode">${icon("qr")}Replace my QR code</button></section>`
+    : `<section class="card"><h2>At the gate</h2><ol class="steps"><li>Check the ticket as usual.</li><li>Scan the QR code and look at the name.</li><li>Tap to add the points.</li></ol></section>`;
   return {
     html:
       heading(
         "My profile",
-        "Your Sentinel account.",
+        "",
       ) +
       `<div class="grid two-column"><div class="stack"><section class="card"><div class="account-header"><span class="avatar">${esc(
         u.name
@@ -491,9 +600,10 @@ VIEWS.account = async () => {
           .map((n) => n[0])
           .slice(0, 2)
           .join(""),
-      )}</span><div><h2>${esc(u.name)}</h2><p>${esc({ student: "Student member", staff: "Gate worker", admin: "Program administrator" }[u.role])}</p></div></div><dl class="account-grid"><dt>Email</dt><dd>${esc(u.email)}</dd>${u.studentNumber ? `<dt>Student ID</dt><dd>${esc(u.studentNumber)}</dd>` : ""}<dt>School</dt><dd>Sample High School</dd><dt>Access</dt><dd>${state.demo ? "Demo role switcher" : "Signed-in account"}</dd></dl><div class="notice section-gap">${icon("info")}${backend ? "You’re exploring sample accounts in this browser. Nothing is sent to a server. Use the role switcher to see the student, gate worker, and coach screens." : state.demo ? "You’re exploring sample accounts. Use the role switcher to see the student, gate worker, and coach experiences." : "Ask your program administrator to update your account details."}</div>${!state.demo ? '<button class="btn section-gap" id="logout">Log out</button>' : ""}</section>${profileActivity}</div><div class="stack">${u.role === "student" ? membershipCard(u) : ""}${securityCard}</div></div>`,
+      )}</span><div><h2>${esc(u.name)}</h2><p>${esc({ student: "Student member", staff: "Gate worker", admin: "Program administrator" }[u.role])}</p></div></div><dl class="account-grid"><dt>Email</dt><dd>${esc(u.email)}</dd>${u.studentNumber ? `<dt>Student ID</dt><dd>${esc(u.studentNumber)}</dd>` : ""}<dt>School</dt><dd>Sample High School</dd><dt>Access</dt><dd>${state.demo ? "Demo role switcher" : "Signed-in account"}</dd></dl>${!state.demo ? '<button class="btn section-gap" id="logout">Log out</button>' : ""}</section>${profileActivity}</div><div class="stack">${u.role === "student" ? membershipCard(u) : ""}${securityCard}</div></div>`,
     mount() {
       if ($("#print-my-tag")) $("#print-my-tag").onclick = () => printTag(u);
+      if ($("#show-qr")) $("#show-qr").onclick = () => showQr(u);
       if ($("#reset-my-barcode"))
         $("#reset-my-barcode").onclick = () => {
           showDialog(
@@ -528,50 +638,110 @@ VIEWS.account = async () => {
   };
 };
 
+async function toggleGate(e) {
+  await api("PUT", `/api/admin/events/${e.id}`, { open: !e.open });
+  toast(e.open ? "Gate closed." : "Gate is open for check-ins.");
+  route();
+}
+function bindGateToggles(events) {
+  $$("[data-toggle]").forEach(
+    (b) =>
+      (b.onclick = async () => {
+        b.disabled = true;
+        try {
+          await toggleGate(events.find((e) => e.id === b.dataset.toggle));
+        } catch (err) {
+          toast(err.message, true);
+          b.disabled = false;
+        }
+      }),
+  );
+}
+function handleOrder(o, action) {
+  showDialog(
+    action === "fulfill" ? `Hand out ${esc(o.rewardName)}` : "Cancel this reservation?",
+    `${esc(o.studentName)} · ID ${esc(o.studentNumber)}`,
+    `<div class="notice">${icon("info")}${action === "fulfill" ? "Check the student’s school ID first." : `${o.cost} points go back to the student.`}</div>`,
+    async () => {
+      await api("POST", `/api/admin/orders/${o.id}/${action}`, {});
+      toast(
+        action === "fulfill"
+          ? "Marked as collected."
+          : "Reservation canceled and points refunded.",
+      );
+      route();
+    },
+    action === "fulfill" ? "Handed out" : "Cancel & refund",
+  );
+}
+function bindOrders(orders) {
+  ["fulfill", "cancel"].forEach((action) =>
+    $$(`[data-${action}]`).forEach(
+      (b) =>
+        (b.onclick = () =>
+          handleOrder(
+            orders.find((o) => o.id === b.dataset[action]),
+            action,
+          )),
+    ),
+  );
+}
 VIEWS.overview = async () => {
-  const [o, { events }] = await Promise.all([
+  const [o, { events }, { orders = [] }, { users = [] }] = await Promise.all([
     api("GET", "/api/admin/overview"),
     api("GET", "/api/events"),
+    api("GET", "/api/admin/orders"),
+    api("GET", "/api/admin/users"),
   ]);
-  const stats = [
-    [
-      "Active members",
-      o.activeMembers,
-      `${o.students} students enrolled`,
-      "users",
-    ],
-    ["Game check-ins", o.checkIns, "One award per student, per event", "scan"],
-    [
-      "Attendance points",
-      o.pointsAwarded,
-      "Earned through game check-ins",
-      "star",
-    ],
-    [
-      "Prize pickups",
-      o.pendingOrders,
-      "Reservations awaiting collection",
-      "gift",
-    ],
+  const open = events.filter((e) => e.open),
+    next = events
+      .filter((e) => !e.open && e.date >= today())
+      .sort((a, b) => a.date.localeCompare(b.date))[0],
+    waiting = orders.filter((x) => x.status === "pending"),
+    inactive = users.filter((u) => u.role === "student" && !u.membership?.valid && !u.disabled);
+  const game = (e) =>
+    `<section class="game-now ${e.open ? "open" : ""}"><div class="game-info">${e.open ? pill("Gate open", "live") : pill(`${fmtDate(e.date, { weekday: "short" })} · ${fmtStart(e)}`)}<h2>${esc(e.name)}</h2><p>${e.open ? `<strong>${num(e.attendanceCount)}</strong> checked in · ` : ""}${num(e.points)} points each</p></div><div class="game-acts">${e.open ? `${link("Open scanner", "gate", "btn hot")}<button type="button" class="btn ghost" data-toggle="${e.id}">Close gate</button>` : `<button type="button" class="btn hot" data-toggle="${e.id}">Open the gate</button>`}</div></section>`;
+  const todo = [
+    ...waiting
+      .slice(0, 4)
+      .map(
+        (x) =>
+          `<div class="todo-item"><div>${studentProfileLink(x.userId, x.studentName)}<span>${esc(x.rewardName)} is waiting</span></div><button type="button" class="btn small primary" data-fulfill="${x.id}">Hand out</button></div>`,
+      ),
+    ...inactive
+      .slice(0, 4)
+      .map(
+        (u) =>
+          `<div class="todo-item"><div>${studentProfileLink(u.id, u.name)}<span>Membership isn’t active</span></div><button type="button" class="btn small" data-activate="${u.id}">Activate</button></div>`,
+      ),
   ];
+  const more =
+    Math.max(0, waiting.length - 4) + Math.max(0, inactive.length - 4);
   return {
     html:
       heading(
-        "Program overview",
-        `Welcome, ${esc(state.user.name)}. Here’s how the program is doing.`,
+        "Overview",
+        "",
         `<a class="btn" id="export-ledger" href="/api/admin/export/ledger.csv" download="points-ledger.csv">${icon("download")}Export points log</a>`,
       ) +
-      `<div class="stats-row">${stats.map(([label, count, sub, ico]) => `<div class="card stat-card"><div class="stat-label">${label}${icon(ico)}</div><strong>${num(count)}</strong><p>${sub}</p></div>`).join("")}</div>${events
-        .filter((e) => e.open)
-        .map(
-          (e) =>
-            `<div class="live-event-banner"><div>${pill("Gate open", "live")}<h2>${esc(e.name)}</h2><p>${e.attendanceCount} checked in · ${e.points} points per student</p></div>${link("Open gate screen", "gate", "btn primary")}</div>`,
-        )
-        .join(
-          "",
-        )}<div class="grid two-column"><section class="card"><div class="card-top"><h2>Recent check-ins</h2>${link("Gate check-in", "gate")}</div>${o.recentAttendance.length ? o.recentAttendance.map((a) => `<div class="activity-item"><div class="activity-badge">${icon("check")}</div><div class="activity-info">${studentProfileLink(a.userId, a.studentName)}<span>${esc(a.eventName)} · ${fmtTime(a.at)}</span></div><span class="delta">+${a.points}</span></div>`).join("") : empty("Check in your first student at the gate.", "scan")}</section><div class="stack"><section class="card"><div class="card-top"><h2>On the calendar</h2>${link("Manage", "events")}</div>${eventList(events.slice(0, 3))}</section><section class="card"><h2>Shortcuts</h2><div class="form-stack section-gap">${link("Enroll a member or replace a QR code", "members", "btn")}${link("Manage prize pickups", "orders", "btn")}${link("Update the reward shop", "rewards", "btn")}</div></section></div></div>`,
+      `<div class="games-now">${open.map(game).join("") || (next ? game(next) : `<section class="game-now"><div class="game-info"><h2>No games yet</h2><p>Add one to open a gate.</p></div><div class="game-acts">${link("Add a game", "events", "btn hot")}</div></section>`)}</div><div class="stats-row">${[
+        ["Active members", o.activeMembers],
+        ["Check-ins", o.checkIns],
+        ["Points given", o.pointsAwarded],
+        ["Waiting pickups", o.pendingOrders],
+      ]
+        .map(([label, n]) => `<div class="stat"><strong>${num(n)}</strong><span>${label}</span></div>`)
+        .join("")}</div><div class="grid two-column even"><section class="card"><div class="card-top"><h2>To do</h2>${more ? `<span class="muted">${more} more</span>` : ""}</div>${todo.join("") || empty("Nothing waiting.", "check")}</section><section class="card"><h2>Just checked in</h2>${o.recentAttendance.length ? o.recentAttendance.slice(0, 6).map((a) => `<div class="activity-item"><div class="activity-info">${studentProfileLink(a.userId, a.studentName)}<span>${esc(a.eventName)} · ${fmtTime(a.at)}</span></div><span class="delta">+${a.points}</span></div>`).join("") : empty("No check-ins yet.", "scan")}</section></div>${demoNext("student", "Reserve a prize as Ava, then hand it out here.", "Student view")}`,
     mount() {
       bindStudentProfiles();
+      bindGateToggles(events);
+      bindOrders(orders);
+      bindDemoNext();
+      $$("[data-activate]").forEach(
+        (b) =>
+          (b.onclick = () =>
+            manageMember(users.find((u) => u.id === b.dataset.activate), true)),
+      );
       // The browser demo has no server to download from, so build the file here.
       if (backend)
         $("#export-ledger").onclick = async (e) => {
@@ -611,11 +781,18 @@ VIEWS.events = async () => {
   return {
     html:
       heading(
-        "Events",
-        "Create games, choose point values, and open the gate.",
+        "Games",
+        "Points can be earned only while a gate is open.",
         btn("Add game", "add-event", "primary", "plus"),
       ) +
-      `<section class="card"><div class="table-wrap"><table><thead><tr><th>Event</th><th>Date / time</th><th>Points</th><th>Check-ins</th><th>Gate</th><th>Manage</th></tr></thead><tbody>${events.map((e) => `<tr><td><strong>${esc(e.name)}</strong><small>${esc(e.sport)} · ${esc(e.location)}</small></td><td>${fmtDate(e.date, { year: "numeric" })}<small>${fmtStart(e)}</small></td><td>${num(e.points)}</td><td>${e.attendanceCount}</td><td><button class="btn small ${e.open ? "danger" : "blue"}" data-toggle="${e.id}">${e.open ? "Close gate" : "Open gate"}</button></td><td><div class="actions"><button class="btn small" data-edit="${e.id}">Edit</button>${!e.attendanceCount ? `<button class="btn small danger" data-delete="${e.id}">Delete</button>` : ""}</div></td></tr>`).join("") || '<tr><td colspan="6">No games yet. Add your first event.</td></tr>'}</tbody></table></div></section><div class="notice section-gap">${icon("info")}Workers can award points only while a gate is open. Closing a gate preserves its attendance records. Event dates and times use the school’s Eastern time.</div>`,
+      `<section class="card"><div class="game-list">${
+        events
+          .map(
+            (e) =>
+              `<div class="game-row"><div class="event-date"><span>${fmtDate(e.date, { day: undefined })}</span><strong>${new Date(`${e.date}T12:00:00`).getDate()}</strong></div><div class="event-content"><strong>${esc(e.name)}</strong><p>${fmtStart(e)} · ${esc(e.location)}</p><p>${num(e.points)} points · ${num(e.attendanceCount)} checked in</p></div><div class="actions"><button class="btn small ${e.open ? "danger" : "primary"}" data-toggle="${e.id}">${e.open ? "Close gate" : "Open gate"}</button><button class="btn small" data-edit="${e.id}">Edit</button>${!e.attendanceCount ? `<button class="btn small quiet" data-delete="${e.id}">Delete</button>` : ""}</div></div>`,
+          )
+          .join("") || empty("No games yet. Add your first one.")
+      }</div></section>`,
     mount() {
       $("#add-event").onclick = () => eventEditor();
       $$("[data-edit]").forEach(
@@ -623,21 +800,7 @@ VIEWS.events = async () => {
           (b.onclick = () =>
             eventEditor(events.find((e) => e.id === b.dataset.edit))),
       );
-      $$("[data-toggle]").forEach(
-        (b) =>
-          (b.onclick = async () => {
-            b.disabled = true;
-            try {
-              const e = events.find((e) => e.id === b.dataset.toggle);
-              await api("PUT", `/api/admin/events/${e.id}`, { open: !e.open });
-              toast(e.open ? "Gate closed." : "Gate is open for check-ins.");
-              route();
-            } catch (err) {
-              toast(err.message, true);
-              b.disabled = false;
-            }
-          }),
-      );
+      bindGateToggles(events);
       $$("[data-delete]").forEach(
         (b) =>
           (b.onclick = () => {
@@ -659,12 +822,43 @@ VIEWS.events = async () => {
   };
 };
 
+function manageMember(u, activate = false) {
+  const m = u.membership || {};
+  showDialog(
+    activate ? `Activate ${esc(u.name)}` : esc(u.name),
+    `Student #${esc(u.studentNumber)} · ${num(u.points)} points`,
+    `<div class="form-stack"><label class="check-label"><input type="checkbox" name="active" ${m.active || activate ? "checked" : ""}>${activate ? "The school has confirmed this membership" : "Membership activated by the school"}</label><label>Membership valid through<input type="date" name="expires" value="${esc(activate && (!m.expires || m.expires < today()) ? rules.seasonEnd() : m.expires)}" required></label>${activate ? "" : `<label class="check-label"><input type="checkbox" name="replaceTag">Replace a lost QR code and turn off the old one</label><div class="notice">${icon("info")}Current code: ${esc(groupCode(m.tag))}</div><label>Points adjustment (optional)<input name="delta" type="number" step="1" min="-100000" max="100000" placeholder="e.g. 20 or -10"></label><label>Reason for adjustment<input name="reason" maxlength="120" placeholder="Required when adjusting points"></label>`}</div>`,
+    async (data) => {
+      const delta = data.delta ? Number(data.delta) : 0;
+      if (delta && !data.reason.trim())
+        throw new Error(
+          "Enter a reason for the points adjustment.",
+        );
+      if (delta && u.points + delta < 0)
+        throw new Error(
+          "That adjustment would make the balance negative.",
+        );
+      await api("PUT", `/api/admin/members/${u.id}`, {
+        active: data.active === "on",
+        expires: data.expires,
+        replaceTag: data.replaceTag === "on",
+        delta,
+        reason: data.reason || "",
+      });
+      toast(activate ? "Membership updated." : "Member updated.");
+      route();
+    },
+    activate ? "Activate" : "Save changes",
+  );
+}
 VIEWS.members = async () => {
   const { users } = await api("GET", "/api/admin/users");
   const members = users.filter((u) => u.role === "student");
-  function memberRows(q = "") {
+  const valid = (u) => !!u.membership?.valid;
+  function memberRows(q = "", show = "") {
     return (
       members
+        .filter((u) => !show || (show === "active") === valid(u))
         .filter((u) =>
           `${u.name} ${u.studentNumber}`
             .toLowerCase()
@@ -672,7 +866,7 @@ VIEWS.members = async () => {
         )
         .map(
           (u) =>
-            `<tr><td>${studentProfileLink(u.id, u.name)}<small>#${esc(u.studentNumber)} · ${esc(u.email)}</small></td><td>${membershipStatus(u.membership || {})}<small>Through ${u.membership?.expires ? fmtDate(u.membership.expires, { year: "numeric" }) : "not set"}</small></td><td>${num(u.points)}</td><td>${u.attended}</td><td><div class="actions"><button class="btn small" data-manage="${u.id}">Manage</button><button class="btn small" data-tag="${u.id}" aria-label="Show ${esc(u.name)}’s QR code">${icon("qr")}QR code</button></div></td></tr>`,
+            `<tr><td>${studentProfileLink(u.id, u.name)}<small>#${esc(u.studentNumber)} · ${esc(u.email)}</small></td><td>${membershipStatus(u.membership || {})}<small>Through ${u.membership?.expires ? fmtDate(u.membership.expires, { year: "numeric" }) : "not set"}</small></td><td data-label="Points">${num(u.points)}</td><td data-label="Games">${u.attended}</td><td><div class="actions"><button class="btn small ${valid(u) ? "" : "primary"}" data-manage="${u.id}">${valid(u) ? "Manage" : "Activate"}</button><button class="btn small" data-tag="${u.id}" aria-label="Show ${esc(u.name)}’s QR code">${icon("qr")}QR code</button></div></td></tr>`,
         )
         .join("") ||
       '<tr><td colspan="5">No students match your search.</td></tr>'
@@ -682,10 +876,16 @@ VIEWS.members = async () => {
     html:
       heading(
         "Members",
-        "Manage memberships, QR codes, and student points.",
+        "",
         btn("Enroll student", "add-member", "primary", "plus"),
       ) +
-      `<section class="card"><div class="card-top"><h2>Members <span class="muted">(${members.length})</span></h2><input class="search-input" id="member-search" type="search" aria-label="Search members" placeholder="Search name or student ID"></div><div class="table-wrap"><table><thead><tr><th>Student</th><th>Membership</th><th>Points</th><th>Games</th><th>Actions</th></tr></thead><tbody id="member-rows">${memberRows()}</tbody></table></div></section><div class="notice section-gap">${icon("info")}Membership payments happen outside this website. Activate membership after the school confirms enrollment. Replacing a QR code turns off the old one and keeps the student’s points.</div>`,
+      `<section class="card"><div class="card-top"><div class="filters">${[
+        ["", "All", members.length],
+        ["active", "Active", members.filter(valid).length],
+        ["inactive", "Inactive", members.filter((u) => !valid(u)).length],
+      ]
+        .map(([id, label, n], i) => `<button type="button" class="tab-filter ${i ? "" : "active"}" data-show="${id}" aria-pressed="${!i}">${label} ${n}</button>`)
+        .join("")}</div><input class="search-input" id="member-search" type="search" aria-label="Search members" placeholder="Name or student ID"></div><div class="table-wrap"><table class="stacked"><thead><tr><th>Student</th><th>Membership</th><th>Points</th><th>Games</th><th>Actions</th></tr></thead><tbody id="member-rows">${memberRows()}</tbody></table></div></section>`,
     mount() {
       const wire = () => {
         bindStudentProfiles($("#member-rows"));
@@ -698,39 +898,28 @@ VIEWS.members = async () => {
           (b) =>
             (b.onclick = () => {
               const u = members.find((u) => u.id === b.dataset.manage);
-              showDialog(
-                esc(u.name),
-                `Student #${esc(u.studentNumber)} · ${num(u.points)} points`,
-                `<div class="form-stack"><label class="check-label"><input type="checkbox" name="active" ${u.membership.active ? "checked" : ""}>Membership activated by the school</label><label>Membership valid through<input type="date" name="expires" value="${esc(u.membership.expires)}" required></label><label class="check-label"><input type="checkbox" name="replaceTag">Replace a lost QR code and turn off the old one</label><div class="notice">${icon("info")}Current code: ${esc(groupCode(u.membership.tag))}</div><label>Points adjustment (optional)<input name="delta" type="number" step="1" min="-100000" max="100000" placeholder="e.g. 20 or -10"></label><label>Reason for adjustment<input name="reason" maxlength="120" placeholder="Required when adjusting points"></label></div>`,
-                async (data) => {
-                  const delta = data.delta === "" ? 0 : Number(data.delta);
-                  if (delta && !data.reason.trim())
-                    throw new Error(
-                      "Enter a reason for the points adjustment.",
-                    );
-                  if (delta && u.points + delta < 0)
-                    throw new Error(
-                      "That adjustment would make the balance negative.",
-                    );
-                  await api("PUT", `/api/admin/members/${u.id}`, {
-                    active: data.active === "on",
-                    expires: data.expires,
-                    replaceTag: data.replaceTag === "on",
-                    delta,
-                    reason: data.reason,
-                  });
-                  toast("Member updated.");
-                  route();
-                },
-              );
+              manageMember(u, !valid(u));
             }),
         );
       };
       wire();
-      $("#member-search").oninput = (e) => {
-        $("#member-rows").innerHTML = memberRows(e.target.value);
+      let show = "";
+      const draw = () => {
+        $("#member-rows").innerHTML = memberRows($("#member-search").value, show);
         wire();
       };
+      $("#member-search").oninput = draw;
+      $$("[data-show]").forEach(
+        (b) =>
+          (b.onclick = () => {
+            show = b.dataset.show;
+            $$("[data-show]").forEach((el) => {
+              el.classList.toggle("active", el === b);
+              el.setAttribute("aria-pressed", String(el === b));
+            });
+            draw();
+          }),
+      );
       $("#add-member").onclick = () =>
         showDialog(
           "Enroll a student",
@@ -752,9 +941,9 @@ VIEWS.members = async () => {
 
 function rewardEditor(r = {}) {
   showDialog(
-    r.id ? "Edit reward" : "Add a reward",
+    r.id ? "Edit prize" : "Add a prize",
     "Name the prize, its point cost and how many you have.",
-    `<div class="form-stack"><label>Reward name<input name="name" maxlength="80" required value="${esc(r.name)}"></label><label>Description<input name="description" maxlength="200" value="${esc(r.description)}"></label><div class="form-grid"><label>Point cost<input name="cost" type="number" step="1" min="1" max="100000" required value="${r.cost || 100}"></label><label>Available stock<input name="stock" type="number" step="1" min="0" value="${r.stock ?? ""}" placeholder="Blank = unlimited"></label></div><label class="check-label"><input name="active" type="checkbox" ${r.active !== false ? "checked" : ""}>Show in reward shop</label></div>`,
+    `<div class="form-stack"><label>Prize<input name="name" maxlength="80" required value="${esc(r.name)}"></label><label>Description<input name="description" maxlength="200" value="${esc(r.description)}"></label><div class="form-grid"><label>Point cost<input name="cost" type="number" step="1" min="1" max="100000" required value="${r.cost || 100}"></label><label>Available stock<input name="stock" type="number" step="1" min="0" value="${r.stock ?? ""}" placeholder="Blank = unlimited"></label></div><label class="check-label"><input name="active" type="checkbox" ${r.active !== false ? "checked" : ""}>Show in reward shop</label></div>`,
     async (data) => {
       await api(
         r.id ? "PUT" : "POST",
@@ -766,7 +955,7 @@ function rewardEditor(r = {}) {
           active: data.active === "on",
         },
       );
-      toast("Reward saved.");
+      toast("Prize saved.");
       route();
     },
   );
@@ -776,11 +965,11 @@ VIEWS.rewards = async () => {
   return {
     html:
       heading(
-        "Rewards",
-        "Choose the prizes, what they cost and how many are in stock.",
-        btn("Add reward", "add-reward", "primary", "plus"),
+        "Prizes",
+        "",
+        btn("Add prize", "add-reward", "primary", "plus"),
       ) +
-      `<section class="card"><div class="table-wrap"><table><thead><tr><th>Reward</th><th>Points</th><th>Stock</th><th>Visibility</th><th></th></tr></thead><tbody>${rewards.map((r) => `<tr><td><strong>${esc(r.name)}</strong><small>${esc(r.description)}</small></td><td>${num(r.cost)}</td><td>${r.stock === null ? "Unlimited" : r.stock}</td><td>${pill(r.active ? "In shop" : "Hidden", r.active ? "active" : "")}</td><td><button class="btn small" data-reward="${r.id}">Edit reward</button></td></tr>`).join("") || '<tr><td colspan="5">No rewards yet. Add your first item.</td></tr>'}</tbody></table></div></section>`,
+      `<section class="card"><div class="table-wrap"><table class="stacked"><thead><tr><th>Prize</th><th>Points</th><th>Stock</th><th>Visibility</th><th></th></tr></thead><tbody>${rewards.map((r) => `<tr><td><strong>${esc(r.name)}</strong><small>${esc(r.description)}</small></td><td data-label="Points">${num(r.cost)}</td><td data-label="Stock">${r.stock === null ? "Unlimited" : r.stock}</td><td>${pill(r.active ? "In shop" : "Hidden", r.active ? "active" : "")}</td><td><button class="btn small" data-reward="${r.id}">Edit</button></td></tr>`).join("") || '<tr><td colspan="5">No prizes yet. Add your first one.</td></tr>'}</tbody></table></div></section>`,
     mount() {
       $("#add-reward").onclick = () => rewardEditor();
       $$("[data-reward]").forEach(
@@ -811,7 +1000,8 @@ async function openStudentProfile(userId) {
   const dialog = $("#dialog"),
     sequence = ++profileSequence;
   if (dialog.open) dialog.close();
-  dialog.classList.add("student-profile-dialog");
+  resetDialog();
+  dialog.className = "student-profile-dialog";
   dialog.dataset.profileUser = userId;
   dialog.removeAttribute("aria-label");
   dialog.setAttribute("aria-labelledby", "student-profile-title");
@@ -889,64 +1079,43 @@ async function openStudentProfile(userId) {
 
 VIEWS.orders = async () => {
   const { orders } = await api("GET", "/api/admin/orders");
-  const rows = (status) =>
+  const rows = (status, q = "") =>
     orders
       .filter((o) => !status || o.status === status)
+      .filter((o) => `${o.studentName} ${o.studentNumber}`.toLowerCase().includes(q.toLowerCase()))
       .map(
         (o) =>
-          `<tr><td>${studentProfileLink(o.userId, o.studentName)}<small>#${esc(o.studentNumber)}</small></td><td><strong>${esc(o.rewardName)}</strong><small>${num(o.cost)} points · ${fmtTime(o.createdAt)}</small></td><td>${pill({ pending: "Ready for pickup", fulfilled: "Collected", cancelled: "Canceled" }[o.status], o.status)}</td><td>${o.status === "pending" ? `<div class="actions"><button class="btn small primary" data-fulfill="${o.id}">Handed out</button><button class="btn small" data-cancel="${o.id}">Cancel & refund</button></div>` : '<span class="muted">No action needed</span>'}</td></tr>`,
+          `<tr><td>${studentProfileLink(o.userId, o.studentName)}<small>#${esc(o.studentNumber)}</small></td><td><strong>${esc(o.rewardName)}</strong><small>${num(o.cost)} points · ${fmtTime(o.createdAt)}</small></td><td>${pill({ pending: "Ready for pickup", fulfilled: "Collected", cancelled: "Canceled" }[o.status], o.status)}</td><td>${o.status === "pending" ? `<div class="actions"><button class="btn small primary" data-fulfill="${o.id}">Hand out</button><button class="btn small" data-cancel="${o.id}">Cancel & refund</button></div>` : ""}</td></tr>`,
       )
       .join("") ||
-    '<tr><td colspan="4">No reservations in this view.</td></tr>';
+    `<tr><td colspan="4">${empty("No pickups here.", "bag")}</td></tr>`;
   return {
     html:
       heading(
         "Prize pickups",
-        "Check the student’s school ID, then hand over their reward.",
+        "Check the school ID, then hand it over.",
       ) +
-      `<section class="card"><div class="card-top"><h2>Prize pickups</h2><div class="filters"><button class="tab-filter active" data-status="pending">Ready for pickup</button><button class="tab-filter" data-status="">All orders</button></div></div><div class="table-wrap"><table><thead><tr><th>Student</th><th>Reward</th><th>Status</th><th>Actions</th></tr></thead><tbody id="order-rows">${rows("pending")}</tbody></table></div></section>`,
+      `<section class="card"><div class="card-top"><div class="filters"><button class="tab-filter active" data-status="pending">Waiting ${orders.filter((o) => o.status === "pending").length}</button><button class="tab-filter" data-status="">All ${orders.length}</button></div><input class="search-input" id="order-search" type="search" aria-label="Search pickups" placeholder="Name or student ID"></div><div class="table-wrap"><table class="stacked"><thead><tr><th>Student</th><th>Reward</th><th>Status</th><th>Actions</th></tr></thead><tbody id="order-rows">${rows("pending")}</tbody></table></div></section>`,
     mount() {
+      let status = "pending";
+      const draw = () => {
+        $("#order-rows").innerHTML = rows(status, $("#order-search").value);
+        wire();
+      };
       const wire = () => {
         bindStudentProfiles($("#order-rows"));
-        ["fulfill", "cancel"].forEach((action) =>
-          $$(`[data-${action}]`).forEach(
-            (b) =>
-              (b.onclick = () => {
-                const o = orders.find((o) => o.id === b.dataset[action]);
-                showDialog(
-                  action === "fulfill"
-                    ? "Reward collected?"
-                    : "Cancel this reservation?",
-                  `${esc(o.rewardName)} · ${esc(o.studentName)}`,
-                  `<div class="notice">${icon("info")}${action === "fulfill" ? "Confirm you checked the student’s school ID and gave them this reward." : `This returns ${o.cost} points to the student and restores the item’s stock.`}</div>`,
-                  async () => {
-                    await api(
-                      "POST",
-                      `/api/admin/orders/${o.id}/${action}`,
-                      {},
-                    );
-                    toast(
-                      action === "fulfill"
-                        ? "Marked as collected."
-                        : "Reservation canceled and points refunded.",
-                    );
-                    route();
-                  },
-                  action === "fulfill" ? "Mark collected" : "Cancel & refund",
-                );
-              }),
-          ),
-        );
+        bindOrders(orders);
       };
       wire();
+      $("#order-search").oninput = draw;
       $$("[data-status]").forEach(
         (b) =>
           (b.onclick = () => {
+            status = b.dataset.status;
             $$("[data-status]").forEach((el) =>
               el.classList.toggle("active", el === b),
             );
-            $("#order-rows").innerHTML = rows(b.dataset.status);
-            wire();
+            draw();
           }),
       );
     },
@@ -954,11 +1123,11 @@ VIEWS.orders = async () => {
 };
 
 const CAMERA_HELP = Object.freeze({
-  idle: "Point the camera at the student’s membership QR code.",
+  idle: "Scan the student’s membership QR code.",
   opening: "Opening the camera. Allow camera access when your browser asks.",
-  live: "Camera is live. Hold the QR code inside the square.",
+  live: "Hold the QR code inside the square.",
   hint: "Having trouble? Move closer, add light, or tilt the code to cut glare. You can also type the code.",
-  stopped: "Camera stopped. You can still type the code or use name lookup.",
+  stopped: "Camera is off. You can still type the code or use name lookup.",
   insecure:
     "The camera needs a secure HTTPS address, or localhost on this computer. Use Scan a photo, type the code, or use name lookup.",
   unsupported:
@@ -1029,20 +1198,14 @@ VIEWS.gate = async () => {
   if (!selected)
     return {
       html:
-        heading(
-          "Gate check-in",
-          "Check the ticket, scan the QR code, then award points.",
-        ) +
-        `<section class="card">${empty("No gates are open. Ask a coach to open tonight’s event.", "scan")}${state.user.role === "admin" ? link("Manage events", "events", "btn primary") : ""}</section>`,
+        heading("Gate check-in", "") +
+        `<section class="card">${empty("No gates are open. Ask an admin to open the gate for tonight’s game.", "scan")}${state.user.role === "admin" ? link("Open a gate", "events", "btn hot wide") : btn("Check again", "gate-again", "wide")}</section>`,
+      mount() {
+        if ($("#gate-again")) $("#gate-again").onclick = route;
+      },
     };
   return {
-    html:
-      heading(
-        "Gate check-in",
-        "Check the ticket, scan the QR code, then award points.",
-        pill(state.demo ? "Demo gate access" : "VERIFIED GATE ACCESS", "blue"),
-      ) +
-      `<div class="gate-steps"><span><b>1</b>Check the ticket</span>${icon("arrow")}<span><b>2</b>Scan membership QR code</span>${icon("arrow")}<span><b>3</b>Confirm & award points</span></div><div class="grid gate-layout"><section class="card"><div class="card-top"><h2>Membership scanner</h2>${pill("Gate open", "live")}</div><label>Checking in for<select id="gate-event">${open.map((e) => `<option value="${e.id}" ${e.id === selected.id ? "selected" : ""}>${esc(e.name)} · +${e.points} pts</option>`).join("")}</select></label><div class="scanner section-gap" id="scanner"><div id="qr-reader" class="scanner-feed" hidden></div><div class="scan-target" aria-hidden="true">${icon("qr")}</div><p id="camera-message" role="status">${CAMERA_HELP.idle}</p></div><div class="scanner-controls">${btn("Start camera", "start-camera", "primary", "camera")}${btn("Stop camera", "stop-camera", "", "")}${btn("Scan a photo", "scan-photo", "", "image")}</div><input type="file" id="qr-photo" accept="image/*" capture="environment" hidden><div id="qr-file-reader" class="visually-hidden" aria-hidden="true"></div><form class="scan-form" id="tag-form"><label>Or type the membership code<input id="tag-input" name="tag" placeholder="D234 5678 9ABC" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40" required></label><button class="btn" type="submit">Look up</button></form><div class="gate-result" id="gate-result" role="status" aria-live="polite">${icon("qr")}<h3>Waiting for a membership QR code</h3><p>Points are awarded after you confirm this student’s admission.</p></div><div class="notice section-gap">${icon("info")}This scanner reads Sentinel membership QR codes only. It does not read GoFan tickets, so check admission in GoFan first.</div></section><div class="stack"><section class="card"><div class="card-top"><h2>Find a student</h2>${icon("users")}</div><input type="search" id="gate-search" aria-label="Search student name or ID" placeholder="Search name or student ID"><p class="gate-search-status" id="gate-count"></p><div id="gate-members"></div></section><section class="card"><div class="card-top"><h2>Recent check-ins</h2><button type="button" class="btn small" id="refresh-gate">Refresh</button></div><div id="gate-recent"></div></section></div></div>`,
+    html: `<div class="gate-head"><div><h1>Gate check-in</h1><label class="gate-pick ${open.length < 2 ? "one" : ""}"><span class="visually-hidden">Game</span><select id="gate-event">${open.map((e) => `<option value="${e.id}" ${e.id === selected.id ? "selected" : ""}>${esc(e.name)} · +${e.points}</option>`).join("")}</select><b class="gate-name">${esc(selected.name)} · +${selected.points}</b></label></div><div class="gate-tally"><strong id="gate-tally">0</strong>checked in</div></div><div class="grid gate-layout"><div class="gate-main"><section class="gate-view"><div class="scanner" id="scanner"><div id="qr-reader" class="scanner-feed" hidden></div><div class="scan-target" aria-hidden="true">${icon("qr")}</div><p id="camera-message" role="status">${CAMERA_HELP.idle}</p><div class="scanner-controls">${btn("Turn on camera", "start-camera", "hot", "camera")}${btn("Use a photo", "scan-photo", "ghost", "image")}</div><button type="button" class="scan-stop" id="stop-camera" aria-label="Turn off camera">${icon("close")}</button></div><div class="gate-result" id="gate-result" role="status" aria-live="polite"></div></section><input type="file" id="qr-photo" accept="image/*" capture="environment" hidden><div id="qr-file-reader" class="visually-hidden" aria-hidden="true"></div><form class="scan-form" id="tag-form" role="search"><input id="tag-input" name="tag" type="search" aria-label="Student name, ID or code" placeholder="Name, student ID or code" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go" maxlength="40"><button class="btn" type="submit">Find</button></form></div><div class="stack gate-side"><section class="card find"><div class="card-top"><h2>Students</h2><span class="muted" id="gate-count"></span></div><div id="gate-members"></div></section><section class="card"><div class="card-top"><h2>Just checked in</h2><button type="button" class="btn small" id="refresh-gate">Refresh</button></div><div id="gate-recent"></div></section>${demoNext("admin", "Check a student in, then see it in the office.", "Office view")}</div></div>`,
     async mount() {
       const root = $("#view"),
         eventSelect = $("#gate-event"),
@@ -1050,7 +1213,8 @@ VIEWS.gate = async () => {
         scannerBox = $("#scanner", root),
         feed = $("#qr-reader", root),
         startButton = $("#start-camera", root),
-        photoInput = $("#qr-photo", root);
+        photoInput = $("#qr-photo", root),
+        finder = $("#tag-input", root);
       let disposed = false,
         reader = null, // live camera reader
         starting = false,
@@ -1059,7 +1223,65 @@ VIEWS.gate = async () => {
         members = [],
         searchTimer,
         searchEpoch = 0,
-        lookupEpoch = 0;
+        lookupEpoch = 0,
+        wanted = safeSession.get("gateCamera") === "on", // the worker turned it on
+        frozen = false, // camera paused behind a result
+        last = { code: "", at: 0 },
+        nextTimer;
+      const keyboard = matchMedia("(hover: hover) and (pointer: fine)").matches;
+      const want = (on) => {
+        wanted = on;
+        safeSession.set("gateCamera", on ? "on" : "off");
+      };
+      /** A result covers the camera, so the worker looks in one place. */
+      function showResult(kind, html) {
+        clearTimeout(nextTimer);
+        if (disposed) return;
+        resultBox.className = `gate-result show ${kind}`;
+        resultBox.innerHTML = html;
+        $$("[data-next]", resultBox).forEach((b) => (b.onclick = nextStudent));
+        resultBox.scrollIntoView({
+          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "instant"
+            : "smooth",
+          block: "nearest",
+        });
+      }
+      const nextButton = (label = "Scan next student", style = "") =>
+        `<button type="button" class="btn ${style}" data-next id="scan-next">${label}</button>`;
+      function clearResult() {
+        clearTimeout(nextTimer);
+        resultBox.className = "gate-result";
+        resultBox.innerHTML = "";
+      }
+      function nextStudent() {
+        if (disposed) return;
+        clearResult();
+        finder.value = "";
+        loadMembers().catch(() => {});
+        if (reader && frozen) {
+          frozen = false;
+          last.at = Date.now();
+          try {
+            reader.resume();
+            return;
+          } catch {
+            stopCamera();
+          }
+        }
+        if (wanted) startCamera();
+        else if (keyboard) finder.focus({ preventScroll: true });
+      }
+      /** Hold the picture while the worker decides; the camera stays warm. */
+      function freeze() {
+        if (!reader || frozen) return;
+        try {
+          reader.pause(true);
+          frozen = true;
+        } catch {
+          stopCamera();
+        }
+      }
       const activeEvent = () => events.find((e) => e.id === eventSelect.value);
       const cameraMessage = (text) => {
         if (!disposed) $("#camera-message", root).textContent = text;
@@ -1070,6 +1292,7 @@ VIEWS.gate = async () => {
         clearTimeout(hintTimer);
         const current = reader;
         reader = null;
+        frozen = false;
         starting = false;
         feed.hidden = true;
         scannerBox.classList.remove("live");
@@ -1078,6 +1301,7 @@ VIEWS.gate = async () => {
       }
       async function startCamera() {
         if (disposed || starting || reader) return;
+        clearResult();
         if (!window.isSecureContext)
           return cameraMessage(CAMERA_HELP.insecure);
         if (!navigator.mediaDevices?.getUserMedia)
@@ -1097,6 +1321,7 @@ VIEWS.gate = async () => {
             { facingMode: "environment" },
             {
               fps: SCAN_FPS,
+              aspectRatio: 1,
               qrbox: (width, height) => {
                 const side = Math.floor(Math.min(width, height) * SCAN_BOX_RATIO);
                 return { width: side, height: side };
@@ -1104,8 +1329,14 @@ VIEWS.gate = async () => {
             },
             (text) => {
               // The decoder can fire several times for one code: take the first.
-              if (disposed || epoch !== scanEpoch) return;
-              stopCamera();
+              if (disposed || epoch !== scanEpoch || frozen) return;
+              if (text === last.code && Date.now() - last.at < SAME_CODE_MS) {
+                last.at = Date.now(); // the same card is still in view
+                return;
+              }
+              last = { code: text, at: Date.now() };
+              freeze();
+              buzz(30);
               lookUpCode(text, "scan");
             },
             () => {}, // "no code in this frame" is normal; stay quiet
@@ -1115,6 +1346,7 @@ VIEWS.gate = async () => {
             return;
           }
           reader = next;
+          want(true);
           cameraMessage(CAMERA_HELP.live);
           hintTimer = setTimeout(
             () => reader && cameraMessage(CAMERA_HELP.hint),
@@ -1168,37 +1400,52 @@ VIEWS.gate = async () => {
         if (document.hidden && (reader || starting)) {
           stopCamera();
           cameraMessage(CAMERA_HELP.stopped);
-        }
+        } else if (
+          !document.hidden &&
+          wanted &&
+          !resultBox.classList.contains("show")
+        )
+          startCamera();
       }
       document.addEventListener("visibilitychange", onHidden);
       state.cleanup = () => {
         disposed = true;
         clearTimeout(searchTimer);
+        clearTimeout(nextTimer);
         stopCamera();
         document.removeEventListener("visibilitychange", onHidden);
       };
 
       async function loadMembers() {
         const epoch = ++searchEpoch,
-          eventId = eventSelect.value;
+          eventId = eventSelect.value,
+          typed = finder.value.trim(),
+          query = rules.parseMembershipCode(typed).ok ? "" : typed;
         const data = await api(
           "GET",
-          `/api/gate/members?eventId=${encodeURIComponent(eventId)}&q=${encodeURIComponent($("#gate-search", root).value)}`,
+          `/api/gate/members?eventId=${encodeURIComponent(eventId)}&q=${encodeURIComponent(query)}`,
         );
         if (disposed || epoch !== searchEpoch || eventId !== eventSelect.value)
           return;
         members = data.members;
-        $("#gate-count", root).textContent =
-          `${members.length} student${members.length === 1 ? "" : "s"} found`;
+        root.classList.toggle("finding", !!typed);
+        $("#gate-count", root).textContent = query
+          ? `${members.length} found`
+          : num(members.length);
         $("#gate-members", root).innerHTML =
           members
             .slice(0, GATE_LIST_LIMIT)
             .map(
               (u) =>
-                `<div class="manual-result"><div><strong>${esc(u.name)}</strong><small>#${esc(u.studentNumber)} · ${u.checkedIn ? "Already checked in" : u.membership.valid ? "Active member" : "Inactive membership"}</small></div><button class="btn small ${u.checkedIn ? "" : "blue"}" data-pick="${u.id}" ${!u.membership.valid ? "disabled" : ""}>${u.checkedIn ? "View" : "Select"}</button></div>`,
+                `<div class="manual-result ${u.checkedIn ? "in" : ""}"><div><strong>${esc(u.name)}</strong><small>#${esc(u.studentNumber)}${u.checkedIn ? " · Already checked in" : u.membership.valid ? "" : " · Inactive membership"}</small></div><button class="btn small ${u.checkedIn ? "" : "blue"}" data-pick="${u.id}" ${!u.membership.valid ? "disabled" : ""}>${u.checkedIn ? "View" : u.membership.valid ? "Check in" : "Inactive"}</button></div>`,
             )
             .join("") ||
           empty("No students match. Try another name or ID.", "users");
+        if (members.length > GATE_LIST_LIMIT)
+          $("#gate-members", root).insertAdjacentHTML(
+            "beforeend",
+            `<p class="small muted">Showing ${GATE_LIST_LIMIT} of ${num(members.length)}. Type a name to narrow it down.</p>`,
+          );
         $$("[data-pick]", root).forEach(
           (b) =>
             (b.onclick = () =>
@@ -1215,44 +1462,45 @@ VIEWS.gate = async () => {
             `/api/gate/attendance?eventId=${encodeURIComponent(eventId)}`,
           );
         if (disposed || eventId !== eventSelect.value) return;
+        $("#gate-tally", root).textContent = num(attendance.length);
         $("#gate-recent", root).innerHTML = attendance.length
           ? attendance
               .slice(0, GATE_RECENT_LIMIT)
               .map(
                 (a) =>
-                  `<div class="activity-item"><div class="activity-badge">${icon("check")}</div><div class="activity-info"><strong>${esc(a.studentName)}</strong><span>${fmtTime(a.at)} · ${esc(a.workerName)}</span></div><span class="delta">+${a.points}</span></div>`,
+                  `<div class="activity-item"><div class="activity-info"><strong>${esc(a.studentName)}</strong><span>${fmtTime(a.at)} · ${esc(a.workerName)}</span></div><span class="delta">+${a.points}</span></div>`,
               )
               .join("")
           : empty("No check-ins yet.", "scan");
       }
       function showError(err, title = "Couldn’t check in") {
         if (disposed) return;
-        resultBox.className = "gate-result error";
-        resultBox.innerHTML = `${icon("info")}<h3>${esc(title)}</h3><p>${esc(err.message)}</p>${err.network ? "<p><strong>No points were awarded.</strong></p>" : ""}`;
-      }
-      function readyForNext() {
-        resultBox.className = "gate-result";
-        resultBox.innerHTML = `${icon("qr")}<h3>Ready for the next student.</h3><p>Scan a QR code or find a student.</p>`;
-        $("#tag-input", root).value = "";
+        buzz([60, 50, 60]);
+        showResult(
+          "error",
+          `${icon("info")}<h3>${esc(title)}</h3><p>${esc(err.message)}</p>${err.network ? "<p><strong>No points were awarded.</strong></p>" : ""}${nextButton()}`,
+        );
       }
       function chooseMember(u, identity) {
-        stopCamera();
+        freeze();
         const event = activeEvent();
-        resultBox.className = "gate-result";
         if (u.checkedIn) {
-          resultBox.innerHTML = `${icon("check")}<h3>${esc(u.name)} is already checked in</h3><p>No extra points awarded. Each student earns points once per event.</p><button type="button" class="btn" id="scan-next">Scan next student</button>`;
-          $("#scan-next", root).onclick = () => {
-            readyForNext();
-            startCamera();
-          };
-          return;
+          buzz([60, 50, 60]);
+          return showResult(
+            "done",
+            `${icon("check")}<h3>${esc(u.name)} is already checked in</h3><p>No extra points. Points count once per game.</p>${nextButton()}`,
+          );
         }
         if (!u.membership.valid)
           return showError(new Error(rules.MESSAGES.membershipInactive));
-        resultBox.innerHTML = `${icon("user")}<h3>${esc(u.name)}</h3><p>Student #${esc(u.studentNumber)} · ${esc(event.name)}</p><p>Confirm the name and validate this student’s admission in GoFan.</p><button type="button" class="btn primary" id="confirm-admission">Admission verified · Award ${event.points} pts</button>`;
-        $("#confirm-admission", root).onclick = async (e) => {
-          const button = e.currentTarget;
-          button.disabled = true; // one tap, one request
+        showResult(
+          "ask",
+          `<p class="label">Is this the right student?</p><h3>${esc(u.name)}</h3><p>ID ${esc(u.studentNumber)}</p><button type="button" class="btn hot big" id="confirm-admission">Ticket checked, add ${event.points} points</button>${nextButton("Cancel", "ghost")}`,
+        );
+        const confirm = $("#confirm-admission", root);
+        if (keyboard) confirm.focus({ preventScroll: true });
+        confirm.onclick = async () => {
+          confirm.disabled = true; // one tap, one request
           try {
             const data = await api("POST", "/api/gate/check-in", {
               eventId: event.id,
@@ -1260,27 +1508,25 @@ VIEWS.gate = async () => {
               admissionConfirmed: true,
             });
             if (disposed) return;
-            resultBox.className = "gate-result success";
-            resultBox.innerHTML = `${icon("check")}<h3>${esc(data.user.name)}</h3>${data.duplicate ? '<div class="award">Already checked in</div><p>No extra points awarded.</p>' : `<div class="award">+${data.attendance.points} points</div><p>Checked in. ${num(data.user.points)} points now in their account.</p>`}<button type="button" class="btn" id="scan-next">Scan next student</button>`;
-            $("#scan-next", root).onclick = () => {
-              readyForNext();
-              startCamera();
-            };
+            buzz(data.duplicate ? [60, 50, 60] : 120);
+            const rolling = frozen || wanted;
+            showResult(
+              `${data.duplicate ? "done" : "success"} ${rolling ? "rolling" : ""}`,
+              `${icon("check")}<h3>${esc(data.user.name)}</h3>${data.duplicate ? '<div class="award">Already checked in</div><p>No extra points.</p>' : `<div class="award">+${data.attendance.points} points</div><p>${num(data.user.points)} points now in their account.</p>`}${nextButton()}`,
+            );
+            last = { ...last, at: Date.now() };
+            // With the camera on, go straight to the next student.
+            if (rolling) nextTimer = setTimeout(nextStudent, NEXT_SCAN_MS);
+            else if (keyboard) $("[data-next]", root)?.focus({ preventScroll: true });
             await Promise.all([loadMembers(), loadRecent()]);
           } catch (err) {
             showError(err);
           }
         };
-        resultBox.scrollIntoView({
-          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "instant"
-            : "smooth",
-          block: "nearest",
-        });
       }
       /** Scanned or typed text: check it is ours, then look it up exactly. */
       async function lookUpCode(raw, entry) {
-        stopCamera();
+        freeze();
         const parsed = rules.parseMembershipCode(raw);
         if (!parsed.ok)
           return showError(
@@ -1307,16 +1553,34 @@ VIEWS.gate = async () => {
 
       startButton.onclick = startCamera;
       $("#stop-camera", root).onclick = () => {
+        want(false);
         stopCamera();
         cameraMessage(CAMERA_HELP.stopped);
       };
       $("#scan-photo", root).onclick = () => photoInput.click();
       photoInput.onchange = () => scanPhoto(photoInput.files?.[0]);
-      $("#tag-form", root).onsubmit = (e) => {
+      // One box: a code checks in, a name or ID narrows the list.
+      $("#tag-form", root).onsubmit = async (e) => {
         e.preventDefault();
-        lookUpCode($("#tag-input", root).value, "typed");
+        const typed = finder.value.trim();
+        if (!typed) return;
+        finder.blur();
+        if (rules.parseMembershipCode(typed).ok) return lookUpCode(typed, "typed");
+        try {
+          await loadMembers();
+        } catch (err) {
+          return showError(err);
+        }
+        if (disposed) return;
+        const hits = members.filter((u) => u.membership.valid || u.checkedIn);
+        if (members.length === 1 && hits.length === 1)
+          return chooseMember(hits[0], { userId: hits[0].id });
+        if (members.length) return $(".find", root).scrollIntoView({ block: "nearest" });
+        if (/^[\p{L} .'’-]+$/u.test(typed))
+          return showError(new Error("Try another spelling, or their student ID."), "No student found");
+        lookUpCode(typed, "typed");
       };
-      $("#gate-search", root).oninput = () => {
+      finder.oninput = () => {
         clearTimeout(searchTimer);
         searchTimer = setTimeout(
           () => loadMembers().catch(showError),
@@ -1326,13 +1590,26 @@ VIEWS.gate = async () => {
       eventSelect.onchange = () => {
         stopCamera();
         safeSession.set("gateEvent", eventSelect.value);
-        resultBox.className = "gate-result";
-        resultBox.innerHTML = `${icon("qr")}<h3>Event selected</h3><p>Ready for ${esc(activeEvent().name)}.</p>`;
+        clearResult();
+        if (wanted) startCamera();
         Promise.all([loadMembers(), loadRecent()]).catch(showError);
       };
       $("#refresh-gate", root).onclick = () =>
         Promise.all([loadMembers(), loadRecent()]).catch(showError);
       await Promise.all([loadMembers(), loadRecent()]);
+      if (disposed) return;
+      // Already allowed on this phone: no need to ask for a tap again.
+      if (!wanted)
+        try {
+          const p = await navigator.permissions?.query({ name: "camera" });
+          if (p?.state === "granted" && !keyboard && safeSession.get("gateCamera") !== "off")
+            wanted = true;
+        } catch {
+          /* not supported here */
+        }
+      if (disposed) return;
+      if (wanted) startCamera();
+      else if (keyboard) finder.focus({ preventScroll: true });
     },
   };
 };
@@ -1571,10 +1848,10 @@ VIEWS.access = async () => {
     html:
       heading(
         "Account access",
-        "Head-admin controls for roles, bans, and account access.",
-        btn("Add admin / gate worker", "invite-access", "primary", "plus"),
+        "Only the head admin sees this.",
+        btn("Add staff", "invite-access", "primary", "plus"),
       ) +
-      `<section class="card"><div class="card-top"><h2>Account access</h2><input type="search" id="access-search" class="search-input" aria-label="Search accounts" placeholder="Search name or email"></div><div class="table-wrap"><table><thead><tr><th>Account</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="access-rows">${rows()}</tbody></table></div></section><section class="card section-gap"><h2>Recent access changes</h2><p class="card-subtitle">Sign-ins, invitations, roles, and bans are recorded here.</p>${entries.length ? entries.map((a) => `<div class="activity-item"><div class="activity-badge">${icon("user")}</div><div class="activity-info"><strong>${esc(AUDIT_LABELS[a.action] || a.action)} · ${esc(a.targetName)}</strong><span>${esc(a.actorName)} · ${fmtTime(a.at)}${a.detail ? ` · ${esc(a.detail)}` : ""}</span></div></div>`).join("") : empty("No access changes yet.", "users")}</section>`,
+      `<section class="card"><div class="card-top"><h2>Accounts</h2><input type="search" id="access-search" class="search-input" aria-label="Search accounts" placeholder="Search name or email"></div><div class="table-wrap"><table class="stacked"><thead><tr><th>Account</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="access-rows">${rows()}</tbody></table></div></section><section class="card section-gap"><h2>Recent access changes</h2><p class="card-subtitle">Sign-ins, invitations, roles, and bans are recorded here.</p>${entries.length ? entries.map((a) => `<div class="activity-item"><div class="activity-badge">${icon("user")}</div><div class="activity-info"><strong>${esc(AUDIT_LABELS[a.action] || a.action)} · ${esc(a.targetName)}</strong><span>${esc(a.actorName)} · ${fmtTime(a.at)}${a.detail ? ` · ${esc(a.detail)}` : ""}</span></div></div>`).join("") : empty("No access changes yet.", "users")}</section>`,
     mount() {
       const wire = () =>
         $$("[data-access]").forEach(
@@ -1698,19 +1975,30 @@ async function route() {
     $("#avatar").title = state.user.name;
     const label = nav.find(([id]) => id === tab)[1];
     $("#page-name").textContent = label;
-    $("#navigation").innerHTML = nav
-      .map(
-        ([id, text, ico]) =>
-          `<a href="#/${id}" class="${id === tab ? "active" : ""}" ${id === tab ? 'aria-current="page"' : ""}>${icon(ico)}${text}</a>`,
-      )
-      .join("");
+    const navLink = ([id, text, ico]) =>
+      `<a href="#/${id}" class="${id === tab ? "active" : ""}" ${id === tab ? 'aria-current="page"' : ""}>${icon(ico)}${text}</a>`;
+    const folded = nav.length > PHONE_TABS + 1;
+    const rest = folded ? nav.slice(PHONE_TABS) : [];
+    $("#navigation").innerHTML =
+      nav.slice(0, folded ? PHONE_TABS : nav.length).map(navLink).join("") +
+      (folded
+        ? `<button type="button" id="nav-more" class="${rest.some(([id]) => id === tab) ? "active" : ""}" aria-expanded="false" aria-controls="nav-rest">${icon("more")}More</button><div id="nav-rest">${rest.map(navLink).join("")}</div>`
+        : "");
+    if (folded)
+      $("#nav-more").onclick = () => openMore(!$("#navigation").classList.contains("open"));
+    openMore(false);
+    if (state.user.role === "admin") showPickupCount(generation);
     document.title = `${label} | Sentinel`;
+    document.body.classList.toggle("demo", !!state.demo);
     $("#view").innerHTML =
       '<div class="loading">Loading…</div>';
     const view = await VIEWS[tab]();
     if (generation !== state.render) return;
     $("#view").innerHTML = view.html;
+    if (tab !== state.tab) document.documentElement.scrollTop = 0;
+    state.tab = tab;
     await view.mount?.();
+    if (generation === state.render) bindDemoNext();
   } catch (err) {
     if (generation !== state.render) return;
     $("#view").innerHTML =
@@ -1718,36 +2006,56 @@ async function route() {
     $("#retry").onclick = route;
   }
 }
-$$("#roles button").forEach(
-  (b) =>
-    (b.onclick = async () => {
-      if (b.dataset.role === state.user?.role) return;
-      $$("#roles button").forEach((el) => {
-        el.disabled = true;
-      });
-      state.cleanup?.();
-      state.cleanup = null;
-      try {
-        const { user } = await api("POST", "/api/demo/switch", {
-          role: b.dataset.role,
-        });
-        state.user = user;
-        const first = NAV[user.role][0][0];
-        history.replaceState(
-          null,
-          "",
-          backend ? demoUrl(user.role, first) : `#/${first}`,
-        );
-        await route();
-      } catch (err) {
-        toast(err.message, true);
-      } finally {
-        $$("#roles button").forEach((el) => {
-          el.disabled = false;
-        });
-      }
-    }),
-);
+function openMore(open) {
+  $("#navigation").classList.toggle("open", open);
+  $("#nav-more")?.setAttribute("aria-expanded", String(open));
+}
+document.addEventListener("click", (e) => {
+  if (!e.target.closest?.("#navigation")) openMore(false);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") openMore(false);
+});
+async function showPickupCount(generation) {
+  try {
+    const { pendingOrders } = await api("GET", "/api/admin/overview");
+    const tab = $('#navigation a[href="#/orders"]');
+    if (generation === state.render && tab && pendingOrders)
+      tab.insertAdjacentHTML(
+        "beforeend",
+        `<b class="badge" aria-label="${pendingOrders} waiting">${pendingOrders}</b>`,
+      );
+  } catch {
+    /* the count is a nicety */
+  }
+}
+async function switchRole(role) {
+  if (role === state.user?.role) return;
+  $$("#roles button").forEach((el) => {
+    el.disabled = true;
+  });
+  state.cleanup?.();
+  state.cleanup = null;
+  try {
+    const { user } = await api("POST", "/api/demo/switch", { role });
+    state.user = user;
+    state.tab = null;
+    const first = NAV[user.role][0][0];
+    history.replaceState(
+      null,
+      "",
+      backend ? demoUrl(user.role, first) : `#/${first}`,
+    );
+    await route();
+  } catch (err) {
+    toast(err.message, true);
+  } finally {
+    $$("#roles button").forEach((el) => {
+      el.disabled = false;
+    });
+  }
+}
+$$("#roles button").forEach((b) => (b.onclick = () => switchRole(b.dataset.role)));
 
 /* ----- Connection status (real mode) ------------------------------ */
 
@@ -1764,6 +2072,8 @@ function showDemoBanner() {
   const banner = $("#demo-banner");
   banner.hidden = false;
   document.body.classList.add("browser-demo");
+  // One bar: who you are, start over, leave.
+  banner.insertBefore($("#roles"), $("#demo-reset"));
   const note = $("#demo-storage-note");
   const problem = backend.storageProblem;
   note.hidden = !problem;
