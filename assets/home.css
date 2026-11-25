@@ -51,6 +51,7 @@
 /* ---------- 3. the fill ---------- */
 .s-fill{background:var(--ink)}
 .s-fill.live{height:270svh}
+@media (max-width:700px){.s-fill.live{height:225svh}} /* quicker on phones */
 .s-fill.live .stick{position:sticky;top:0;height:100svh}
 .s-fill img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .s-fill .empty{filter:grayscale(1) contrast(1.15) brightness(.62)}

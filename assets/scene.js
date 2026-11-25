@@ -507,7 +507,7 @@ void main(){
   /* ---------- the fill: rows of empty bleachers turn over to a crowd ---------- */
   const fill = document.querySelector(".s-fill");
   if (fill && "IntersectionObserver" in window) {
-    const set = () => { const r = fill.getBoundingClientRect(), p = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight))), f = calm ? (p > .4 ? 1 : 0) : Math.min(1, Math.max(0, (p - .16) / .52)); fill.style.setProperty("--f", f.toFixed(4)); fill.classList.toggle("done", f >= .999); };
+    const set = () => { const r = fill.getBoundingClientRect(), p = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight))), f = calm ? (p > .4 ? 1 : 0) : Math.min(1, Math.max(0, (p - (innerWidth <= 700 ? .1 : .16)) / .52)); fill.style.setProperty("--f", f.toFixed(4)); fill.classList.toggle("done", f >= .999); };
     addEventListener("scroll", set, { passive: true }); addEventListener("resize", set); set(); fill.classList.add("live");
   }
 })();
